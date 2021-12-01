@@ -27,6 +27,10 @@ def init_database():
         sql = "create table data (timestamp TEXT, name TEXT, value TEXT)"
         db.execute(sql)
         db.commit()
+
+        sql = "create table ctrl (name TEXT, value TEXT)"
+        db.execute(sql)
+        db.commit()
         db.close()
 
 
@@ -54,15 +58,42 @@ def teardown_request(exception):
         g.db.close()
 
 
+def get_variable(name):
+    data = None
+
+    try:
+        sql = "SELECT * FROM ctrl WHERE name = '{}'".format(name)
+        data = query_db(g.db, sql, one=True)
+    except Exception as exc:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        print("ERROR reading data on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
+
+    if data is not None:
+        return data.get('value', '')
+
+    return data
+
+
+def set_variable(name, value):
+    try:
+        data = get_variable(name)
+        if data is None:
+            sql = "INSERT INTO ctrl (name, value) VALUES ('{}', '{}')".format(name, value)
+        else:
+            sql = "UPDATE ctrl SET value = '{}' WHERE name = '{}'".format(value, name)
+        exec_db(sql)
+
+    except Exception as exc:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        print("ERROR writing data to db on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
+
+
 def save_data(name, value):
     try:
         ts = datetime.timestamp(datetime.now())
-        db = sqlite3.connect(db_path)
         sql = "INSERT INTO data (timestamp, name, value) VALUES ('{}', '{}', '{}')" \
               "".format(ts, name, value)
-        db.execute(sql)
-        db.commit()
-        db.close()
+        exec_db(sql)
 
     except Exception as exc:
         exc_type, exc_obj, exc_tb = sys.exc_info()
@@ -212,6 +243,41 @@ def post_data():
         save_data(name, value)
 
     return 'ok'
+
+
+# example query: /setvar?key=AdminSecretKey123&N=var_name&V=var_value
+@app.route('/setvar', methods=['GET'])
+def set_var():
+    access_key = request.args.get('key', ' ')
+
+    if ADMIN_KEY != access_key:
+        return "Unauthorized"
+
+    name = request.args.get('N', None)
+    value = request.args.get('V', None)
+
+    if name is not None and value is not None:
+        set_variable(name, value)
+
+    return 'ok'
+
+
+# example query: /getvar?key=AdminSecretKey123&N=var_name
+@app.route('/getvar', methods=['GET'])
+def get_var():
+    access_key = request.args.get('key', ' ')
+
+    if ADMIN_KEY != access_key:
+        return "Unauthorized"
+
+    name = request.args.get('N', None)
+
+    if name is not None:
+        var = get_variable(name)
+        if var is not None:
+            return var
+
+    return 'none'
 
 
 if __name__ == '__main__':

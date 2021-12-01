@@ -1,6 +1,15 @@
 # Data collector web UI #
 
-Python Flask simple data collector service. Deploy it anywhere and go to url or IP address like 
+Python Flask simple data collector service. Initially intended for uploading data from embedded projects like Arduino boards, ESP8266, ESP32,... 
+
+## How to start ##
+Istall Flask and plotly
+
+
+    pip install Flask, plotly
+
+
+Deploy it anywhere and go to url or IP address like 
 
 
     http://localhost:8000?key=AdminSecretKey123
@@ -19,11 +28,21 @@ To post new data go to:
 You can use any HTML safe data_name and value. The timestamp will be automatically updated according to current time.
 After posting few samples, you will be able to view a graphical display on the front page.
 
+To set a variable go to "/setvar" page. Also make sure you have the correct access key like:
+
+
+    http://localhost:8000/setvar?key=AdminSecretKey123&N=var_name&V=var_value
+
+
+To retrieve a variable value, go to "/getvar" page like:
+
+
+    http://localhost:8000/getvar?key=AdminSecretKey123&N=var_name
+
 
 ## TODO ##
 
-1. Add data that can be used to controll devices (not timestamped and only one instance of each data name).
-2. Add delete button so a data set can be cleared.
+Add delete button so a data set can be cleared.
 
 ## Contact ##
 
