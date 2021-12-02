@@ -26,22 +26,37 @@
 </style>
     <meta charset="UTF-8">
     <title>Data collection</title>
-     <script src="//code.jquery.com/jquery-1.11.0.min.js"></script>
-    <script src="http://netdna.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script type="text/javascript" src="{{url_for('static', filename='js/jquery-1.11.0.min.js')}}"></script>
+    <script type="text/javascript" src="{{url_for('static', filename='js/bootstrap.min.js')}}"></script>
+    <script type="text/javascript" src="{{url_for('static', filename='js/custom.js')}}"></script>
+    <link rel="stylesheet" href="{{url_for('static', filename='css/bootstrap.min.css')}}">
+    <link rel="stylesheet" href="{{url_for('static', filename='css/custom.css')}}">
     <link rel='shortcut icon' type='image/x-icon' href='/favicon.ico' />
-    <link rel="stylesheet" href="/static/trafficLights.css" type="text/css">
 </head>
 <body>
     <div class="center">
         <h1>Data Collection</h1>
-        <a href="/download?id='{{dldid}}'">Download data</a>
+        <a href="/download?id='{{dldid}}'" class="btn btn-primary" >Download data</a>
+        <button onclick='clearData()' class="btn btn-danger">Clear data</button>
     </div>
 
+    <hr>
+    <div class="center">
+        <h2>Controlls</h2>
+        {% for variable in vars %}
+        <button onclick='toggleVar("{{ variable["name"] }}", "{{ variable["value"] }}")'
+            {% if variable["value"] == '0' %}
+                class="btn btn-danger">{{ variable["name"] }} ({{ variable["value"] }}) Set
+            {% else %}
+                class="btn btn-success">{{ variable["name"] }} ({{ variable["value"] }}) Clear
+            {% endif %}
+        </button>
+        {% endfor %}
+    </div>
+    <hr>
     {% for plot in plots %}
     <div class="center">
         {{ plot["plot"] }}
-<!--         <button onclick='delete("{{ plot["date"] }}")'>Delete</button>-->
     </div>
     {% endfor %}
 

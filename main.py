@@ -1,7 +1,7 @@
 import json
 import time
 
-from flask import Flask, request, render_template, Markup, send_from_directory, g
+from flask import Flask, request, render_template, Markup, send_from_directory, g, redirect
 import sys
 import os
 import sqlite3
@@ -10,7 +10,7 @@ from plotly.graph_objs import Scatter, Layout
 from datetime import datetime
 import time
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='/static', static_folder='static')
 app.secret_key = "<g\x93E\xf3\xc6\xb8\xc4\x87\xff\xf6\x0fxD\x91\x13\x9e\xfe1+%\xa3"
 db_path = "database.db"
 WEB_PORT = 8000
@@ -70,6 +70,19 @@ def get_variable(name):
 
     if data is not None:
         return data.get('value', '')
+
+    return data
+
+
+def get_all_variables():
+    data = None
+
+    try:
+        sql = "SELECT * FROM ctrl"
+        data = query_db(g.db, sql)
+    except Exception as exc:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        print("ERROR reading data on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
 
     return data
 
@@ -198,7 +211,9 @@ def home_page():
                         plot_data = {"date": year + "." + month, "plot": plot_html}
                         plot_list.append(plot_data)
 
-        return render_template("home.html", plots=plot_list, dldid=int(time.time()))
+            vars = get_all_variables()
+
+        return render_template("home.html", plots=plot_list, dldid=int(time.time()), vars=vars)
 
 
 @app.route('/download')
@@ -280,8 +295,20 @@ def get_var():
     return 'none'
 
 
+@app.route('/cleardata', methods=['GET'])
+def cleardata():
+    access_key = request.args.get('key', ' ')
+
+    if ADMIN_KEY == access_key:
+        g.db.close()
+        os.remove(db_path)
+        init_database()
+
+    return redirect("/?key=" + access_key)
+
+
 if __name__ == '__main__':
     if not os.path.isfile(db_path):
         init_database()
 
-    app.run(host="0.0.0.0", port=WEB_PORT, debug = True)
+    app.run(host="0.0.0.0", port=WEB_PORT, debug=True)
