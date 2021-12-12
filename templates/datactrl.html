@@ -1,0 +1,113 @@
+
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Smart Irrigation</title>
+<link rel="stylesheet" href="{{url_for('static', filename='css/font-awesome.min.css')}}">
+<link rel="stylesheet" href="{{url_for('static', filename='css/bootstrap.min.css')}}">
+<link target="_blank" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+<link target="_blank" href="https://fonts.googleapis.com/css?family=Open+Sans:400,700" rel="stylesheet">
+<link target="_blank" href="https://fonts.googleapis.com/css?family=Armata" rel="stylesheet">
+<link rel="stylesheet" href="{{url_for('static', filename='css/feedback4.css')}}">
+<link rel="stylesheet" href="{{url_for('static', filename='css/datactrl.css')}}">
+<script type="text/javascript" src="{{url_for('static', filename='js/custom.js')}}"></script>
+
+<div class="header-container">
+	<div class="header-content">
+		<div class="container">
+            <a href="/">
+            <img src="{{url_for('static', filename='images/envato-logo-small.svg')}}" alt="Smiley face" style="float:left;width:64px;height:64px;"></a>
+            <a href="/">
+                <img src="{{url_for('static', filename='images/envato-logo-small.svg')}}" alt="Smiley face" style="float:right;width:64px;height:64px;"></a>
+			<a class="img src" href="/" target="_blank"><h1>SMART IRRIGATION</h1></a><!--Logo Link-->
+
+			<div class="header-right">
+				<input type="checkbox" id="nav-trigger" class="nav-trigger">
+				<label for="nav-trigger" class="hidden-nav">MENU</label>
+				<div class="menu-header menu-header-mobile">
+					<div class="container">
+						<div class="menu-container">
+							<ul class="menu">
+								<li><a href="/?key={{key}}">Home</a></li>
+								<li><a href="/datactrl?key={{key}}">Data & Controlls</a></li>
+								<li><a href="/graphs?key={{key}}">Graphs</a></li>
+								<li><a href="/about?key={{key}}">About Us</a></li>
+							</ul>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="menu-header">
+			<div class="container">
+				<div class="menu-container">
+					<ul class="menu">
+						<li><a href="/?key={{key}}">Home</a></li>
+						<li><a href="/datactrl?key={{key}}">Data & Controlls</a></li>
+						<li><a href="/graphs?key={{key}}">Graphs</a></li>
+						<li><a href="/about?key={{key}}">About Us</a></li>
+					</ul>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<!--Header End-->
+
+<div class="content">
+	<div class="container">
+		<div class="inner-row">
+			<div class="col-md-12 right-content">
+				<div class="panel-big-1 border-0">
+					<div class="right-content-1">
+						
+					</div>
+				</div>
+			</div>
+		</div>
+				
+		<div class="panel-big-2">
+			<h1 class="title-heading">CONTROLLS</h1>
+			<div class="text-section" >
+				<p><b></p>
+
+				{% for variable in vars %}
+				<br>
+				<pre class="tab"
+					 onclick='toggleVar("{{ variable["name"] }}", "{{ variable["value"] }}")'>
+					<b>{{ variable["name"] }}</b> ({{ variable["value"] }})	{% if variable["value"] == '0' %}Set{% else %}Clear{% endif %}
+				</pre>
+				{% endfor %}
+
+			</div>
+
+			<div class="panel-big-2">
+				<h1 class="title-heading">DATA</h1>
+				<div class="text-section">
+					
+						<table class="table eytable table-striped">
+							<tbody>
+								{% for variable in value_list %}
+								<tr><th> {{ variable["name"] }}</th>
+									<td>{{ variable["val"] }}{{ variable["unit"] }}</td>
+								</tr>
+								{% endfor %}
+								
+							</tbody>
+						</table>
+					
+				</div>
+			</div>
+		</div>
+	</div>
+
+</div>
+
+                                
+                                    
+                            
+                               
+                                                      
+
+				

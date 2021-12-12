@@ -21,5 +21,5 @@ function toggleVar(name, value){
     xmlHttp.open( "GET", url, false );
     xmlHttp.send( null );
 
-    window.location.href = "/?key=" + key + "&dummy=" + Date.now();
+    window.location.href = "/datactrl?key=" + key + "&dummy=" + Date.now();
 }

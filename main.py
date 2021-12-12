@@ -167,6 +167,24 @@ def favicon():
 
 @app.route('/')
 def home_page():
+    access_key = request.args.get('key', ' ')
+    if ADMIN_KEY != access_key:
+        return "Unauthorized"
+    else:
+        return render_template("home_page.html", key=access_key)
+
+
+@app.route('/about')
+def about_page():
+    access_key = request.args.get('key', ' ')
+    if ADMIN_KEY != access_key:
+        return "Unauthorized"
+    else:
+        return render_template("about.html", key=access_key)
+
+
+@app.route('/graphs')
+def graphs():
     global color_id
 
     color_id = 0
@@ -174,7 +192,6 @@ def home_page():
 
     if ADMIN_KEY != access_key:
         return "Unauthorized"
-
     else:
         plot_list = []
 
@@ -206,14 +223,45 @@ def home_page():
                     for month in year_data.keys():
                         month_data = year_data[month]
                         plot_title = "{} {}, {}".format(name, month, year)
-                        plot = create_plot(plot_title, month_data)
+                        plot = create_plot("", month_data)
                         plot_html = Markup(plot)
-                        plot_data = {"date": year + "." + month, "plot": plot_html}
+                        plot_data = {"date": year + "." + month, "plot": plot_html, "title": plot_title}
                         plot_list.append(plot_data)
 
-            vars = get_all_variables()
+        return render_template("graphs.html", plots=plot_list, key=access_key, dldid=int(time.time()))
 
-        return render_template("home.html", plots=plot_list, dldid=int(time.time()), vars=vars)
+
+@app.route('/datactrl')
+def data_and_controls():
+    global color_id
+
+    color_id = 0
+    access_key = request.args.get('key', ' ')
+
+    if ADMIN_KEY != access_key:
+        return "Unauthorized"
+    else:
+        data_list = get_data()
+        new_list = []
+        if data_list is not None:
+            data_dict = {}
+
+            for data in data_list:
+                name = data["name"]
+                data_dict[name] = data["value"]
+
+            for name in data_dict.keys():
+                unit = ""
+                if "temperature" in name.lower():
+                    unit = "°C"
+                elif "moisture" in name.lower():
+                    unit = "%"
+                elif "humidity" in name.lower():
+                    unit = "%"
+
+                new_list.append({"name": name, "val": data_dict[name], "unit": unit})
+        vars = get_all_variables()
+        return render_template("datactrl.html", dldid=int(time.time()), vars=vars, key=access_key, value_list=new_list)
 
 
 @app.route('/download')
