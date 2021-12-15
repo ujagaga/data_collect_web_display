@@ -13,7 +13,7 @@ import time
 app = Flask(__name__, static_url_path='/static', static_folder='static')
 app.secret_key = "<g\x93E\xf3\xc6\xb8\xc4\x87\xff\xf6\x0fxD\x91\x13\x9e\xfe1+%\xa3"
 db_path = "database.db"
-WEB_PORT = 8000
+WEB_PORT = 8001
 ADMIN_KEY = "AdminSecretKey123"     # An HTML safe string
 COLORS = ["#000000", "#A52A2A", "#7FFFD4", "#8A2BE2", "#D2691E", "#2F4F4F", "#008000"]
 color_id = 0

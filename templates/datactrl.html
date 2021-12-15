@@ -73,11 +73,13 @@
 				<p><b></p>
 
 				{% for variable in vars %}
-				<br>
-				<pre class="tab"
-					 onclick='toggleVar("{{ variable["name"] }}", "{{ variable["value"] }}")'>
-					<b>{{ variable["name"] }}</b> ({{ variable["value"] }})	{% if variable["value"] == '0' %}Set{% else %}Clear{% endif %}
-				</pre>
+				<div class="switch-toggle">
+					<label onclick='toggleVar("{{ variable["name"] }}", "{{ variable["value"] }}")'>
+						<p>{{ variable["name"] }}</p>
+						<input type="checkbox" {% if variable["value"] == '0' %}{% else %}checked{% endif %}>
+						<span></span>
+					</label>
+				</div>
 				{% endfor %}
 
 			</div>
