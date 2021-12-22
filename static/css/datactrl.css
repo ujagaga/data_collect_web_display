@@ -307,3 +307,14 @@ a.text:hover{text-decoration:none}
     top: 0;
     right: 150%;
 }
+
+.gen-var{
+    width: 100%;
+    display: flex;
+    justify-content: center;
+}
+
+.gen-var input{
+    margin-left: 10px;
+    padding-left: 10px;
+}

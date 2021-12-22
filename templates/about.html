@@ -9,6 +9,7 @@
 <link target="_blank" href="https://fonts.googleapis.com/css?family=Armata" rel="stylesheet">
 <link rel="stylesheet" href="{{url_for('static', filename='css/feedback4.css')}}">
 <link rel="stylesheet" href="{{url_for('static', filename='css/about.css')}}">
+<link rel="stylesheet" href="{{url_for('static', filename='css/custom.css')}}">
 
 <div class="header-container">
 	
@@ -16,8 +17,7 @@
 		<div class="container">
             <a href="/">
             <img src="{{url_for('static', filename='images/envato-logo-small.svg')}}" alt="Smiley face" style="float:left;width:64px;height:64px;"></a>
-            <a href="/">
-                <img src="{{url_for('static', filename='images/envato-logo-small.svg')}}" alt="Smiley face" style="float:right;width:64px;height:64px;"></a>
+			<a id="login_link" href='/{{ login["url"] }}' >{{ login["name"] }}</a>
 			<a class="img src" href="/" target="_blank"><h1>SMART IRRIGATION</h1></a><!--Logo Link-->
 
 			<div class="header-right">
@@ -27,10 +27,10 @@
 					<div class="container">
 						<div class="menu-container">
 							<ul class="menu">
-								<li><a href="/?key={{key}}">Home</a></li>
-								<li><a href="/datactrl?key={{key}}">Data & Controlls</a></li>
-								<li><a href="/graphs?key={{key}}">Graphs</a></li>
-								<li><a href="/about?key={{key}}">About Us</a></li>
+								<li><a href="/">Home</a></li>
+								<li><a href="/datactrl?dummy={{dldid}}">Data & Controlls</a></li>
+								<li><a href="/graphs?dummy={{dldid}}">Graphs</a></li>
+								<li><a href="/about">About Us</a></li>
 							</ul>
 						</div>
 					</div>
@@ -41,10 +41,10 @@
 			<div class="container">
 				<div class="menu-container">
 					<ul class="menu">
-						<li><a href="/?key={{key}}">Home</a></li>
-						<li><a href="/datactrl?key={{key}}">Data & Controlls</a></li>
-						<li><a href="/graphs?key={{key}}">Graphs</a></li>
-						<li><a href="/about?key={{key}}">About Us</a></li>
+						<li><a href="/">Home</a></li>
+						<li><a href="/datactrl?dummy={{dldid}}">Data & Controlls</a></li>
+						<li><a href="/graphs?dummy={{dldid}}">Graphs</a></li>
+						<li><a href="/about">About Us</a></li>
 					</ul>
 				</div>
 			</div>

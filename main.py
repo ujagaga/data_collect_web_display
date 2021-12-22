@@ -1,7 +1,7 @@
 import json
 import time
 
-from flask import Flask, request, render_template, Markup, send_from_directory, g, redirect
+from flask import Flask, request, render_template, Markup, send_from_directory, g, redirect, make_response
 import sys
 import os
 import sqlite3
@@ -17,6 +17,11 @@ WEB_PORT = 8001
 ADMIN_KEY = "AdminSecretKey123"     # An HTML safe string
 COLORS = ["#000000", "#A52A2A", "#7FFFD4", "#8A2BE2", "#D2691E", "#2F4F4F", "#008000"]
 color_id = 0
+ADMIN_USERNAME = "admin"
+ADMIN_PASS = "admin123"
+
+# List here beginnings of variable names to use as toggle. Others will be used with their full value in an input box.
+vars_to_toggle = {"led", "auto"}
 
 
 def init_database():
@@ -80,6 +85,18 @@ def get_all_variables():
     try:
         sql = "SELECT * FROM ctrl"
         data = query_db(g.db, sql)
+
+        if len(data) > 0:
+            new_data = []
+            for item in data:
+                type = "gen"
+                for nameStart in vars_to_toggle:
+                    if item["name"].lower().startswith(nameStart.lower()):
+                        item["type"] = "toggle"
+                new_data.append(item)
+
+            data = new_data
+
     except Exception as exc:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         print("ERROR reading data on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
@@ -167,20 +184,23 @@ def favicon():
 
 @app.route('/')
 def home_page():
-    access_key = request.args.get('key', ' ')
+    access_key = request.cookies.get('token')
     if ADMIN_KEY != access_key:
-        return "Unauthorized"
+        login_var = {"name": "Login", "url": "login"}
     else:
-        return render_template("home_page.html", key=access_key)
+        login_var = {"name": "Logout", "url": "logout"}
+    return render_template("home_page.html", dldid=int(time.time()), login=login_var)
 
 
 @app.route('/about')
 def about_page():
-    access_key = request.args.get('key', ' ')
+    access_key = request.cookies.get('token')
     if ADMIN_KEY != access_key:
-        return "Unauthorized"
+        login_var = {"name": "Login", "url": "login"}
     else:
-        return render_template("about.html", key=access_key)
+        login_var = {"name": "Logout", "url": "logout"}
+
+    return render_template("about.html", dldid=int(time.time()), login=login_var)
 
 
 @app.route('/graphs')
@@ -188,11 +208,11 @@ def graphs():
     global color_id
 
     color_id = 0
-    access_key = request.args.get('key', ' ')
-
+    access_key = request.cookies.get('token')
     if ADMIN_KEY != access_key:
-        return "Unauthorized"
+        return redirect("/login")
     else:
+        login_var = {"name": "Logout", "url": "logout"}
         plot_list = []
 
         # get latest data
@@ -228,7 +248,10 @@ def graphs():
                         plot_data = {"date": year + "." + month, "plot": plot_html, "title": plot_title}
                         plot_list.append(plot_data)
 
-        return render_template("graphs.html", plots=plot_list, key=access_key, dldid=int(time.time()))
+        response = make_response(render_template("graphs.html", plots=plot_list, login=login_var, dldid=int(time.time())))
+        response.set_cookie('token', ADMIN_KEY, max_age=1200)
+
+        return response
 
 
 @app.route('/datactrl')
@@ -236,11 +259,12 @@ def data_and_controls():
     global color_id
 
     color_id = 0
-    access_key = request.args.get('key', ' ')
+    access_key = request.cookies.get('token')
 
     if ADMIN_KEY != access_key:
-        return "Unauthorized"
+        return redirect("/login")
     else:
+        login_var = {"name": "Logout", "url": "logout"}
         data_list = get_data()
         new_list = []
         if data_list is not None:
@@ -261,7 +285,11 @@ def data_and_controls():
 
                 new_list.append({"name": name, "val": data_dict[name], "unit": unit})
         vars = get_all_variables()
-        return render_template("datactrl.html", dldid=int(time.time()), vars=vars, key=access_key, value_list=new_list)
+
+        response = make_response(render_template("datactrl.html", dldid=int(time.time()), vars=vars, value_list=new_list, login=login_var))
+        response.set_cookie('token', ADMIN_KEY, max_age=1200)
+
+        return response
 
 
 @app.route('/download')
@@ -314,7 +342,7 @@ def set_var():
     access_key = request.args.get('key', ' ')
 
     if ADMIN_KEY != access_key:
-        return "Unauthorized"
+        return redirect("/login")
 
     name = request.args.get('N', None)
     value = request.args.get('V', None)
@@ -331,7 +359,7 @@ def get_var():
     access_key = request.args.get('key', ' ')
 
     if ADMIN_KEY != access_key:
-        return "Unauthorized"
+        return redirect("/login")
 
     name = request.args.get('N', None)
 
@@ -352,7 +380,32 @@ def cleardata():
         os.remove(db_path)
         init_database()
 
-    return redirect("/?key=" + access_key)
+    return redirect("/")
+
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form.get("username", '')
+        password = request.form.get("password", '')
+        if password == ADMIN_PASS and username == ADMIN_USERNAME:
+            response = make_response(redirect("/"))
+            response.set_cookie('token', ADMIN_KEY, max_age=1200)
+            return response
+        else:
+            message = "Login or password incorrect"
+    else:
+        message = request.args.get("message")
+
+    response = make_response(render_template('login.html', message=message))
+    return response
+
+
+@app.route('/logout', methods=['GET'])
+def logout():
+    response = make_response(redirect("/"))
+    response.set_cookie('token', '', max_age=0)
+    return response
 
 
 if __name__ == '__main__':

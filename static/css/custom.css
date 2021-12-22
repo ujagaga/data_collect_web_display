@@ -1,0 +1,10 @@
+#login_link{
+    float:right;
+    width:64px;
+    background-color: #3eb650;
+    color: white;
+    line-height: 64px;
+    display: block;
+    text-align: center;
+    border-radius: 5px;
+}
