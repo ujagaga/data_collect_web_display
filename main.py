@@ -1,6 +1,3 @@
-import json
-import time
-
 from flask import Flask, request, render_template, Markup, send_from_directory, g, redirect, make_response
 import sys
 import os
@@ -13,15 +10,12 @@ import time
 app = Flask(__name__, static_url_path='/static', static_folder='static')
 app.secret_key = "<g\x93E\xf3\xc6\xb8\xc4\x87\xff\xf6\x0fxD\x91\x13\x9e\xfe1+%\xa3"
 db_path = "database.db"
-WEB_PORT = 8001
+WEB_PORT = 8000
+ADMIN_USERNAME = "admin"
+ADMIN_PASS = "admin123"
 ADMIN_KEY = "AdminSecretKey123"     # An HTML safe string
 COLORS = ["#000000", "#A52A2A", "#7FFFD4", "#8A2BE2", "#D2691E", "#2F4F4F", "#008000"]
 color_id = 0
-ADMIN_USERNAME = "admin"
-ADMIN_PASS = "admin123"
-
-# List here beginnings of variable names to use as toggle. Others will be used with their full value in an input box.
-vars_to_toggle = {"led", "auto"}
 
 
 def init_database():
@@ -33,7 +27,7 @@ def init_database():
         db.execute(sql)
         db.commit()
 
-        sql = "create table ctrl (name TEXT, value TEXT)"
+        sql = "create table ctrl (name TEXT, value TEXT, groupby TEXT, type TEXT)"
         db.execute(sql)
         db.commit()
         db.close()
@@ -86,16 +80,14 @@ def get_all_variables():
         sql = "SELECT * FROM ctrl"
         data = query_db(g.db, sql)
 
-        if len(data) > 0:
-            new_data = []
-            for item in data:
-                type = "gen"
-                for nameStart in vars_to_toggle:
-                    if item["name"].lower().startswith(nameStart.lower()):
-                        item["type"] = "toggle"
-                new_data.append(item)
+        items = {}
+        for item in data:
+            group = item["groupby"]
+            item_list = items.get(group, [])
+            item_list.append(item)
+            items[group] = item_list
 
-            data = new_data
+        data = items
 
     except Exception as exc:
         exc_type, exc_obj, exc_tb = sys.exc_info()
@@ -104,11 +96,13 @@ def get_all_variables():
     return data
 
 
-def set_variable(name, value):
+def set_variable(name, value, groupby="", var_type=""):
     try:
         data = get_variable(name)
+
         if data is None:
-            sql = "INSERT INTO ctrl (name, value) VALUES ('{}', '{}')".format(name, value)
+            sql = "INSERT INTO ctrl (name, value, groupby, type) VALUES ('{}', '{}', '{}', '{}')" \
+                  "".format(name, value, groupby, var_type)
         else:
             sql = "UPDATE ctrl SET value = '{}' WHERE name = '{}'".format(value, name)
         exec_db(sql)
@@ -210,48 +204,48 @@ def graphs():
     color_id = 0
     access_key = request.cookies.get('token')
     if ADMIN_KEY != access_key:
-        return redirect("/login")
+        login_var = {"name": "Login", "url": "login"}
     else:
         login_var = {"name": "Logout", "url": "logout"}
-        plot_list = []
 
-        # get latest data
-        data_list = get_data()
-        if data_list is not None:
-            data_dict = {}
+    plot_list = []
 
-            for data in data_list:
-                timestamp = datetime.fromtimestamp(int(data["timestamp"].split('.')[0]))
-                name = data["name"]
-                value = float(data["value"])
-                year = datetime.strftime(timestamp, '%Y')
-                month = datetime.strftime(timestamp, '%B')
-                day_time = datetime.strftime(timestamp, '%d, %H:%M:%S')
+    # get latest data
+    data_list = get_data()
+    if data_list is not None:
+        data_dict = {}
 
-                name_data = data_dict.get(name, {})
-                year_data = name_data.get(year, {})
-                month_data = year_data.get(month, [])
-                month_data.append([day_time, value])
-                year_data[month] = month_data
-                name_data[year] = year_data
-                data_dict[name] = name_data
+        for data in data_list:
+            timestamp = datetime.fromtimestamp(int(data["timestamp"].split('.')[0]))
+            name = data["name"]
+            value = float(data["value"])
+            year = datetime.strftime(timestamp, '%Y')
+            month = datetime.strftime(timestamp, '%B')
+            day_time = datetime.strftime(timestamp, '%d, %H:%M:%S')
 
-            for name in data_dict:
-                name_data = data_dict[name]
-                for year in name_data.keys():
-                    year_data = name_data[year]
-                    for month in year_data.keys():
-                        month_data = year_data[month]
-                        plot_title = "{} {}, {}".format(name, month, year)
-                        plot = create_plot("", month_data)
-                        plot_html = Markup(plot)
-                        plot_data = {"date": year + "." + month, "plot": plot_html, "title": plot_title}
-                        plot_list.append(plot_data)
+            name_data = data_dict.get(name, {})
+            year_data = name_data.get(year, {})
+            month_data = year_data.get(month, [])
+            month_data.append([day_time, value])
+            year_data[month] = month_data
+            name_data[year] = year_data
+            data_dict[name] = name_data
 
-        response = make_response(render_template("graphs.html", plots=plot_list, login=login_var, dldid=int(time.time())))
-        response.set_cookie('token', ADMIN_KEY, max_age=1200)
+        for name in data_dict:
+            name_data = data_dict[name]
+            for year in name_data.keys():
+                year_data = name_data[year]
+                for month in year_data.keys():
+                    month_data = year_data[month]
+                    plot_title = "{} {}, {}".format(name, month, year)
+                    plot = create_plot("", month_data)
+                    plot_html = Markup(plot)
+                    plot_data = {"date": year + "." + month, "plot": plot_html, "title": plot_title}
+                    plot_list.append(plot_data)
 
-        return response
+    response = make_response(render_template("graphs.html", plots=plot_list, login=login_var, dldid=int(time.time())))
+
+    return response
 
 
 @app.route('/datactrl')
@@ -286,7 +280,8 @@ def data_and_controls():
                 new_list.append({"name": name, "val": data_dict[name], "unit": unit})
         vars = get_all_variables()
 
-        response = make_response(render_template("datactrl.html", dldid=int(time.time()), vars=vars, value_list=new_list, login=login_var))
+        response = make_response(render_template("datactrl.html", dldid=int(time.time()), vars=vars,
+                                                 value_list=new_list, login=login_var))
         response.set_cookie('token', ADMIN_KEY, max_age=1200)
 
         return response
@@ -346,9 +341,11 @@ def set_var():
 
     name = request.args.get('N', None)
     value = request.args.get('V', None)
+    groupby = request.args.get('G', "")
+    var_type = request.args.get('T', "")
 
     if name is not None and value is not None:
-        set_variable(name, value)
+        set_variable(name, value, groupby, var_type)
 
     return 'ok'
 

@@ -70,24 +70,27 @@
 		<div class="panel-big-2">
 			<h1 class="title-heading">CONTROLLS</h1>
 			<div class="text-section" >
-				{% for variable in vars %}
-				{% if variable["type"] == "toggle" %}
-				<div class="switch-toggle">
-					<label onclick='toggleVar("{{ variable["name"] }}", "{{ variable["value"] }}")'>
-						<p>{{ variable["name"] }}</p>
-						<input type="checkbox" {% if variable["value"] == '0' %}{% else %}checked{% endif %}>
-						<span></span>
-					</label>
-				</div>
-				{% else %}
-				<div class="gen-var">
-					<label for='var_{{ variable["name"] }}'>{{ variable["name"] }}</label>
-					<input class="genvar" type="text" name = 'var_{{ variable["name"] }}' id='var_{{ variable["name"] }}'
-						   value='{{variable["value"]}}' onkeydown="save_value(this);"><br>
-				</div>
-				{% endif %}
+				{% for key in vars.keys() %}
+				<div class="groupby"><p>{{ key }}</p></div>
+				{% for variable in vars[key] %}
+					{% if variable["type"] == "toggle" %}
+					<div class="switch-toggle">
+						<label onclick='toggleVar("{{ variable["name"] }}", "{{ variable["value"] }}")'>
+							<p>{{ variable["name"] }}</p>
+							<input type="checkbox" {% if variable["value"] == '0' %}{% else %}checked{% endif %}>
+							<span></span>
+						</label>
+					</div>
+					{% else %}
+					<div class="gen-var">
+						<label for='var_{{ variable["name"] }}'>{{ variable["name"] }}</label>
+						<input class="genvar" type="text" name = 'var_{{ variable["name"] }}' id='var_{{ variable["name"] }}'
+							   value='{{variable["value"]}}' onkeydown="save_value(this);"><br>
+					</div>
+					{% endif %}
+				<br><br>
 				{% endfor %}
-
+				{% endfor %}
 			</div>
 
 			<div class="panel-big-2">
