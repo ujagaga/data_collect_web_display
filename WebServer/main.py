@@ -1,3 +1,5 @@
+#!/usr/bin/python3
+
 from flask import Flask, request, render_template, Markup, send_from_directory, g, redirect, make_response
 import sys
 import os
@@ -153,7 +155,7 @@ def create_plot(plot_title, data):
 
     plot = plotly.offline.plot({
         "data": [Scatter(x=dataDictionary["X"], y=dataDictionary["Y"], line=dict(color=plot_color, width=2))],
-        "layout": Layout(title=plot_title, height=1000, margin=dict(
+        "layout": Layout(title=plot_title, height=800, margin=dict(
             l=50,
             r=50,
             b=100,

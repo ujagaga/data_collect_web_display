@@ -75,7 +75,3 @@ a, a:visited, a:hover, p {
     font-size: 30px;
 }
 
-.plot-view{
-    max-width: 100vw;
-    max-height: calc(100vh - 5em);
-}
