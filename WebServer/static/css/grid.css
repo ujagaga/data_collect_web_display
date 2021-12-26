@@ -1,0 +1,40 @@
+.grid {
+  margin: 1em;
+  display: grid;
+  grid-template-columns: repeat(12, 1fr);
+  grid-gap: 2px;
+  counter-reset: div;
+}
+.grid div {
+  text-align:center;
+}
+.grid div:before {
+  counter-increment: div;
+}
+.grid div[class]:after {
+  display: block;
+  text-align: center;
+}
+.m-auto {
+  margin:auto;
+}
+/* spanning cols */
+.col-12 {
+  grid-column: auto/span 1;
+}
+.col-6 {
+  grid-column: auto/span 2;
+}
+.col-4 {
+  grid-column: auto/span 3;
+}
+.col-3 {
+  grid-column: auto/span 4;
+}
+.col-2 {
+  grid-column: auto/span 6;
+}
+.col-1 {
+  grid-column: auto/span 12;
+}
+

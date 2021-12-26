@@ -13,6 +13,6 @@ Refer to README.md in each folder for more details.
 
 ## Contact ##
 
-* web: http://www.radinaradionica.com
-* email: ujagaga@gmail.com
+* [My web page](http://www.radinaradionica.com)
+* [email] (ujagaga@gmail.com)
 

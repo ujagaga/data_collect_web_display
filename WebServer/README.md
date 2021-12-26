@@ -17,6 +17,7 @@ Deploy it anywhere and go to url or IP address like
     http://localhost:8000
 
 
+Check the "templates" folder and adjust the html for your pages.
 The page "Data & Controlls" is protected by login credentials which can be changed at the top of the "main.py" file, just look for "ADMIN_USERNAME" and "ADMIN_PASS". 
 To post new data, you will need the administration key. Find it next to login credentials as "ADMIN_KEY", then go to:
 
@@ -51,14 +52,14 @@ To retrieve a control variable value, go to "/getvar" page like:
 
 ## Sample urls
 
-http://localhost:8000/postdata?key=AdminSecretKey123&N=Temperature&V=24
-http://localhost:8000/postdata?key=AdminSecretKey123&N=Temperature&V=25
-http://localhost:8000/postdata?key=AdminSecretKey123&N=Temperature&V=26
-
-http://localhost:8000/setvar?key=AdminSecretKey123&N=Automatic mode activate&V=1&G=Automatic Mode&T=toggle
-http://localhost:8000/setvar?key=AdminSecretKey123&N=Minimum moisture&V=30&G=Automatic Mode
-http://localhost:8000/setvar?key=AdminSecretKey123&N=Maximum moisture&V=30&G=Automatic Mode
-http://localhost:8000/setvar?key=AdminSecretKey123&N=Water ON&V=30&G=Manual Mode&T=toggle
+    http://localhost:8000/postdata?key=AdminSecretKey123&N=Temperature&V=24
+    http://localhost:8000/postdata?key=AdminSecretKey123&N=Temperature&V=25
+    http://localhost:8000/postdata?key=AdminSecretKey123&N=Temperature&V=26
+    
+    http://localhost:8000/setvar?key=AdminSecretKey123&N=Automatic mode activate&V=1&G=Automatic Mode&T=toggle
+    http://localhost:8000/setvar?key=AdminSecretKey123&N=Minimum moisture&V=30&G=Automatic Mode
+    http://localhost:8000/setvar?key=AdminSecretKey123&N=Maximum moisture&V=30&G=Automatic Mode
+    http://localhost:8000/setvar?key=AdminSecretKey123&N=Water ON&V=30&G=Manual Mode&T=toggle
 
 ## Contact ##
 

@@ -1,124 +1,73 @@
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Data Acquisition Web Interface</title>
+	<link rel="stylesheet" href="{{url_for('static', filename='css/general.css')}}">
+	<link rel="stylesheet" href="{{url_for('static', filename='css/grid.css')}}">
+	<link rel="stylesheet" href="{{url_for('static', filename='webfonts/fontawsome_all.css')}}">
+	<link rel="stylesheet" href="{{url_for('static', filename='css/data_view.css')}}">
+</head>
 
-<meta charset="utf-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Smart Irrigation</title>
-<link rel="stylesheet" href="{{url_for('static', filename='css/font-awesome.min.css')}}">
-<link rel="stylesheet" href="{{url_for('static', filename='css/bootstrap.min.css')}}">
-<link target="_blank" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
-<link target="_blank" href="https://fonts.googleapis.com/css?family=Open+Sans:400,700" rel="stylesheet">
-<link target="_blank" href="https://fonts.googleapis.com/css?family=Armata" rel="stylesheet">
-<link rel="stylesheet" href="{{url_for('static', filename='css/feedback4.css')}}">
-<link rel="stylesheet" href="{{url_for('static', filename='css/datactrl.css')}}">
-<script type="text/javascript" src="{{url_for('static', filename='js/custom.js')}}"></script>
-<link rel="stylesheet" href="{{url_for('static', filename='css/custom.css')}}">
-
-<div class="header-container">
-	<div class="header-content">
-		<div class="container">
-            <a href="/">
-            <img src="{{url_for('static', filename='images/envato-logo-small.svg')}}" alt="Smiley face" style="float:left;width:64px;height:64px;"></a>
-			<a id="login_link" href='/{{ login["url"] }}' >{{ login["name"] }}</a>
-			<a class="img src" href="/" target="_blank"><h1>SMART IRRIGATION</h1></a><!--Logo Link-->
-
-			<div class="header-right">
-				<input type="checkbox" id="nav-trigger" class="nav-trigger">
-				<label for="nav-trigger" class="hidden-nav">MENU</label>
-				<div class="menu-header menu-header-mobile">
-					<div class="container">
-						<div class="menu-container">
-							<ul class="menu">
-								<li><a href="/">Home</a></li>
-								<li><a href="/datactrl?dummy={{dldid}}">Data & Controlls</a></li>
-								<li><a href="/graphs?dummy={{dldid}}">Graphs</a></li>
-								<li><a href="/about">About Us</a></li>
-							</ul>
-						</div>
-					</div>
-				</div>
-			</div>
-		</div>
-		<div class="menu-header">
-			<div class="container">
-				<div class="menu-container">
-					<ul class="menu">
-						<li><a href="/">Home</a></li>
-						<li><a href="/datactrl?dummy={{dldid}}">Data & Controlls</a></li>
-						<li><a href="/graphs?dummy={{dldid}}">Graphs</a></li>
-						<li><a href="/about">About Us</a></li>
-					</ul>
-				</div>
-			</div>
-		</div>
-	</div>
+<body>
+<div class="navbar">
+	<a href="/" class="app_title">DATA ACQUISITION</a>
+	<ul class="menu">
+		<li><a href="/">Home</a></li>
+		<li><a href="/datactrl?dummy={{dldid}}">Data & Controlls</a></li>
+		<li><a href="/graphs?dummy={{dldid}}">Graphs</a></li>
+	</ul>
+	<a id='login_link' href='/{{ login["url"] }}' title='{{ login["name"] }}'><i class='fa {{ login["icon"] }}'></i></a>
 </div>
-
-<!--Header End-->
-
-<div class="content">
-	<div class="container">
-		<div class="inner-row">
-			<div class="col-md-12 right-content">
-				<div class="panel-big-1 border-0">
-					<div class="right-content-1">
-						
-					</div>
-				</div>
-			</div>
-		</div>
-				
-		<div class="panel-big-2">
+<div class="grid">
+	<div class="col-1">
+		<div class="data_view">
 			<h1 class="title-heading">CONTROLLS</h1>
-			<div class="text-section" >
-				{% for key in vars.keys() %}
-				<div class="groupby"><p>{{ key }}</p></div>
+			{% for key in vars.keys() %}
+			<div class="groupby">
+				<h2>{{ key }}</h2>
 				{% for variable in vars[key] %}
-					{% if variable["type"] == "toggle" %}
-					<div class="switch-toggle">
-						<label onclick='toggleVar("{{ variable["name"] }}", "{{ variable["value"] }}")'>
-							<p>{{ variable["name"] }}</p>
-							<input type="checkbox" {% if variable["value"] == '0' %}{% else %}checked{% endif %}>
-							<span></span>
-						</label>
-					</div>
-					{% else %}
-					<div class="gen-var">
-						<label for='var_{{ variable["name"] }}'>{{ variable["name"] }}</label>
-						<input class="genvar" type="text" name = 'var_{{ variable["name"] }}' id='var_{{ variable["name"] }}'
-							   value='{{variable["value"]}}' onkeydown="save_value(this);"><br>
-					</div>
-					{% endif %}
-				<br><br>
-				{% endfor %}
-				{% endfor %}
-			</div>
 
-			<div class="panel-big-2">
-				<h1 class="title-heading">DATA</h1>
-				<div class="text-section">
-					
-						<table class="table eytable table-striped">
-							<tbody>
-								{% for variable in value_list %}
-								<tr><th> {{ variable["name"] }}</th>
-									<td>{{ variable["val"] }}{{ variable["unit"] }}</td>
-								</tr>
-								{% endfor %}
-								
-							</tbody>
-						</table>
-					
+				{% if variable["type"] == "toggle" %}
+				<div class="toggle-var">
+					<p>{{ variable["name"] }}</p>
+					<label onclick='toggleVar("{{ variable["name"] }}", "{{ variable["value"] }}")'>
+						<input type="checkbox" {% if variable["value"] == '0' %}{% else %}checked{% endif %}>
+						<span class="slider"></span>
+					</label>
 				</div>
+				{% else %}
+				<div class="gen-var">
+					<p>{{ variable["name"] }}</p>
+					<input class="genvar" type="text" name = 'var_{{ variable["name"] }}' id='var_{{ variable["name"] }}'
+						   value='{{variable["value"]}}' onkeydown="save_value(this);">
+				</div>
+				{% endif %}
+
+				{% endfor %}
 			</div>
+			{% endfor %}
 		</div>
 	</div>
 
+	<div class="col-1">
+		<div class="data_view">
+			<h1 class="title-heading">LATEST DATA</h1>
+
+			<table class="table eytable table-striped">
+				<tbody>
+					{% for variable in value_list %}
+					<tr>
+						<th> {{ variable["name"] }}:</th>
+						<td>{{ variable["val"] }}{{ variable["unit"] }}</td>
+					</tr>
+					{% endfor %}
+				</tbody>
+			</table>
+		</div>
+	</div>
 </div>
-
-                                
-                                    
-                            
-                               
-                                                      
-
-				
+</body>
+<script type="text/javascript" src="{{url_for('static', filename='js/general.js')}}"></script>
+</html>

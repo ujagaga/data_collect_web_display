@@ -180,21 +180,10 @@ def favicon():
 def home_page():
     access_key = request.cookies.get('token')
     if ADMIN_KEY != access_key:
-        login_var = {"name": "Login", "url": "login"}
+        login_var = {"name": "Login", "url": "login", "icon": "fa-sign-in-alt"}
     else:
-        login_var = {"name": "Logout", "url": "logout"}
+        login_var = {"name": "Logout", "url": "logout", "icon": "fa-sign-out-alt"}
     return render_template("home_page.html", dldid=int(time.time()), login=login_var)
-
-
-@app.route('/about')
-def about_page():
-    access_key = request.cookies.get('token')
-    if ADMIN_KEY != access_key:
-        login_var = {"name": "Login", "url": "login"}
-    else:
-        login_var = {"name": "Logout", "url": "logout"}
-
-    return render_template("about.html", dldid=int(time.time()), login=login_var)
 
 
 @app.route('/graphs')
@@ -204,9 +193,9 @@ def graphs():
     color_id = 0
     access_key = request.cookies.get('token')
     if ADMIN_KEY != access_key:
-        login_var = {"name": "Login", "url": "login"}
+        login_var = {"name": "Login", "url": "login", "icon": "fa-sign-in-alt"}
     else:
-        login_var = {"name": "Logout", "url": "logout"}
+        login_var = {"name": "Logout", "url": "logout", "icon": "fa-sign-out-alt"}
 
     plot_list = []
 
@@ -258,7 +247,7 @@ def data_and_controls():
     if ADMIN_KEY != access_key:
         return redirect("/login")
     else:
-        login_var = {"name": "Logout", "url": "logout"}
+        login_var = {"name": "Logout", "url": "logout", "icon": "fa-sign-out-alt"}
         data_list = get_data()
         new_list = []
         if data_list is not None:
