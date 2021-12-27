@@ -9,8 +9,8 @@ from plotly.graph_objs import Scatter, Layout
 from datetime import datetime
 import time
 
-app = Flask(__name__, static_url_path='/static', static_folder='static')
-app.secret_key = "<g\x93E\xf3\xc6\xb8\xc4\x87\xff\xf6\x0fxD\x91\x13\x9e\xfe1+%\xa3"
+application = Flask(__name__, static_url_path='/static', static_folder='static')
+application.secret_key = "<g\x93E\xf3\xc6\xb8\xc4\x87\xff\xf6\x0fxD\x91\x13\x9e\xfe1+%\xa3"
 db_path = "database.db"
 WEB_PORT = 8000
 ADMIN_USERNAME = "admin"
@@ -24,7 +24,7 @@ def init_database():
     if not os.path.isfile(db_path):
         # Database does not exist. Create one
         db = sqlite3.connect(db_path)
-        # Create data table
+
         sql = "create table data (timestamp TEXT, name TEXT, value TEXT)"
         db.execute(sql)
         db.commit()
@@ -32,6 +32,11 @@ def init_database():
         sql = "create table ctrl (name TEXT, value TEXT, groupby TEXT, type TEXT)"
         db.execute(sql)
         db.commit()
+
+        sql = "create table units (name TEXT, unit TEXT)"
+        db.execute(sql)
+        db.commit()
+
         db.close()
 
 
@@ -48,12 +53,12 @@ def exec_db(query):
         g.db.commit()
 
 
-@app.before_request
+@application.before_request
 def before_request():
     g.db = sqlite3.connect(db_path)
 
 
-@app.teardown_request
+@application.teardown_request
 def teardown_request(exception):
     if hasattr(g, 'db'):
         g.db.close()
@@ -139,6 +144,43 @@ def get_data():
     return data
 
 
+def set_unit(name, unit):
+    try:
+        sql = "DELETE FROM units WHERE name = '{}'".format(name)
+        exec_db(sql)
+        sql = "INSERT INTO units (name, unit) VALUES ('{}', '{}')".format(name, unit)
+        exec_db(sql)
+
+    except Exception as exc:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        print("ERROR writing data to db on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
+
+
+def get_units(name):
+    unit = ""
+
+    try:
+        sql = "SELECT unit FROM units WHERE name = '{}'".format(name)
+        data = query_db(g.db, sql, one=True)
+
+        if data is None:
+            # Override if none is set
+            if "temperature" in name.lower():
+                unit = "°C"
+            elif "moisture" in name.lower():
+                unit = "%"
+            elif "humidity" in name.lower():
+                unit = "%"
+        else:
+            unit = data["unit"]
+
+    except Exception as exc:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        print("ERROR reading data on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
+
+    return unit
+
+
 def create_plot(plot_title, data):
     global color_id
 
@@ -173,12 +215,12 @@ def create_plot(plot_title, data):
     return plot
 
 
-@app.route('/favicon.ico')
+@application.route('/favicon.ico')
 def favicon():
-    return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
+    return send_from_directory(os.path.join(application.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 
-@app.route('/')
+@application.route('/')
 def home_page():
     access_key = request.cookies.get('token')
     if ADMIN_KEY != access_key:
@@ -188,7 +230,7 @@ def home_page():
     return render_template("home_page.html", dldid=int(time.time()), login=login_var)
 
 
-@app.route('/graphs')
+@application.route('/graphs')
 def graphs():
     global color_id
 
@@ -196,8 +238,10 @@ def graphs():
     access_key = request.cookies.get('token')
     if ADMIN_KEY != access_key:
         login_var = {"name": "Login", "url": "login", "icon": "fa-sign-in-alt"}
+        authorized = False
     else:
         login_var = {"name": "Logout", "url": "logout", "icon": "fa-sign-out-alt"}
+        authorized = True
 
     plot_list = []
 
@@ -234,12 +278,13 @@ def graphs():
                     plot_data = {"date": year + "." + month, "plot": plot_html, "title": plot_title}
                     plot_list.append(plot_data)
 
-    response = make_response(render_template("graphs.html", plots=plot_list, login=login_var, dldid=int(time.time())))
+    response = make_response(render_template("graphs.html", plots=plot_list, login=login_var, auth=authorized,
+                                             dldid=int(time.time())))
 
     return response
 
 
-@app.route('/datactrl')
+@application.route('/datactrl')
 def data_and_controls():
     global color_id
 
@@ -251,6 +296,12 @@ def data_and_controls():
     else:
         login_var = {"name": "Logout", "url": "logout", "icon": "fa-sign-out-alt"}
         data_list = get_data()
+        last_timestamp = float(data_list[-1]['timestamp'])
+
+        most_recent_timestamp = datetime.strftime(datetime.fromtimestamp(last_timestamp), '%Y/%b/%d %H:%M:%S')
+        elapsed = time.strftime('%Hh, %Mm', time.gmtime(time.time() - last_timestamp))
+        most_recent_timestamp += ", elapsed: {}".format(elapsed)
+
         new_list = []
         if data_list is not None:
             data_dict = {}
@@ -260,25 +311,19 @@ def data_and_controls():
                 data_dict[name] = data["value"]
 
             for name in data_dict.keys():
-                unit = ""
-                if "temperature" in name.lower():
-                    unit = "°C"
-                elif "moisture" in name.lower():
-                    unit = "%"
-                elif "humidity" in name.lower():
-                    unit = "%"
+                unit = get_units(name)
 
                 new_list.append({"name": name, "val": data_dict[name], "unit": unit})
         vars = get_all_variables()
 
         response = make_response(render_template("datactrl.html", dldid=int(time.time()), vars=vars,
-                                                 value_list=new_list, login=login_var))
+                                                 value_list=new_list, login=login_var, ts=most_recent_timestamp))
         response.set_cookie('token', ADMIN_KEY, max_age=1200)
 
         return response
 
 
-@app.route('/download')
+@application.route('/download')
 def download_csv():
     data_list = get_data()
     if data_list is not None:
@@ -292,7 +337,7 @@ def download_csv():
             name_data.append([date, value])
             data_dict[name] = name_data
 
-        f = open("data.csv", 'w')
+        f = open("/tmp/data.csv", 'w')
         for name in data_dict.keys():
             f.write("{} date, value\n".format(name))
             value = data_dict[name]
@@ -302,11 +347,10 @@ def download_csv():
 
         f.close()
 
-    return send_from_directory(app.root_path, 'data.csv')
+    return send_from_directory('/tmp', 'data.csv')
 
 
-# example query: /postdata?key=AdminSecretKey123&N=data_name&V=data_value
-@app.route('/postdata', methods=['GET'])
+@application.route('/postdata', methods=['GET'])
 def post_data():
     access_key = request.args.get('key', ' ')
 
@@ -315,15 +359,18 @@ def post_data():
 
     name = request.args.get('N', None)
     value = request.args.get('V', None)
+    unit = request.args.get('U', None)
 
     if name is not None and value is not None:
         save_data(name, value)
 
+        if unit is not None:
+            set_unit(name, unit)
+
     return 'ok'
 
 
-# example query: /setvar?key=AdminSecretKey123&N=var_name&V=var_value
-@app.route('/setvar', methods=['GET'])
+@application.route('/setvar', methods=['GET'])
 def set_var():
     access_key = request.args.get('key', ' ')
 
@@ -341,8 +388,7 @@ def set_var():
     return 'ok'
 
 
-# example query: /getvar?key=AdminSecretKey123&N=var_name
-@app.route('/getvar', methods=['GET'])
+@application.route('/getvar', methods=['GET'])
 def get_var():
     access_key = request.args.get('key', ' ')
 
@@ -359,9 +405,9 @@ def get_var():
     return 'none'
 
 
-@app.route('/cleardata', methods=['GET'])
+@application.route('/cleardata', methods=['GET'])
 def cleardata():
-    access_key = request.args.get('key', ' ')
+    access_key = request.cookies.get('token')
 
     if ADMIN_KEY == access_key:
         g.db.close()
@@ -371,7 +417,7 @@ def cleardata():
     return redirect("/")
 
 
-@app.route('/login', methods=['GET', 'POST'])
+@application.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username = request.form.get("username", '')
@@ -389,7 +435,7 @@ def login():
     return response
 
 
-@app.route('/logout', methods=['GET'])
+@application.route('/logout', methods=['GET'])
 def logout():
     response = make_response(redirect("/"))
     response.set_cookie('token', '', max_age=0)
@@ -400,4 +446,4 @@ if __name__ == '__main__':
     if not os.path.isfile(db_path):
         init_database()
 
-    app.run(host="0.0.0.0", port=WEB_PORT, debug=True)
+    application.run(host="0.0.0.0", port=WEB_PORT, debug=True)
