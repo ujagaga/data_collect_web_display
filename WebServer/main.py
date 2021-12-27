@@ -22,7 +22,7 @@ def init_database():
     if not os.path.isfile(db_path):
         # Database does not exist. Create one
         db = sqlite3.connect(db_path)
-        # Create data table
+
         sql = "create table data (timestamp TEXT, name TEXT, value TEXT)"
         db.execute(sql)
         db.commit()
@@ -30,6 +30,11 @@ def init_database():
         sql = "create table ctrl (name TEXT, value TEXT, groupby TEXT, type TEXT)"
         db.execute(sql)
         db.commit()
+
+        sql = "create table units (name TEXT, unit TEXT)"
+        db.execute(sql)
+        db.commit()
+
         db.close()
 
 
@@ -137,6 +142,43 @@ def get_data():
     return data
 
 
+def set_unit(name, unit):
+    try:
+        sql = "DELETE FROM units WHERE name = '{}'".format(name)
+        exec_db(sql)
+        sql = "INSERT INTO units (name, unit) VALUES ('{}', '{}')".format(name, unit)
+        exec_db(sql)
+
+    except Exception as exc:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        print("ERROR writing data to db on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
+
+
+def get_units(name):
+    unit = ""
+
+    try:
+        sql = "SELECT unit FROM units WHERE name = '{}'".format(name)
+        data = query_db(g.db, sql, one=True)
+
+        if data is None:
+            # Override if none is set
+            if "temperature" in name.lower():
+                unit = "°C"
+            elif "moisture" in name.lower():
+                unit = "%"
+            elif "humidity" in name.lower():
+                unit = "%"
+        else:
+            unit = data["unit"]
+
+    except Exception as exc:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        print("ERROR reading data on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
+
+    return unit
+
+
 def create_plot(plot_title, data):
     global color_id
 
@@ -153,7 +195,7 @@ def create_plot(plot_title, data):
 
     plot = plotly.offline.plot({
         "data": [Scatter(x=dataDictionary["X"], y=dataDictionary["Y"], line=dict(color=plot_color, width=2))],
-        "layout": Layout(title=plot_title, height=1000, margin=dict(
+        "layout": Layout(title=plot_title, height=800, margin=dict(
             l=50,
             r=50,
             b=100,
@@ -180,9 +222,9 @@ def favicon():
 def home_page():
     access_key = request.cookies.get('token')
     if ADMIN_KEY != access_key:
-        login_var = {"name": "Login", "url": "login"}
+        login_var = {"name": "Login", "url": "login", "icon": "fa-sign-in-alt"}
     else:
-        login_var = {"name": "Logout", "url": "logout"}
+        login_var = {"name": "Logout", "url": "logout", "icon": "fa-sign-out-alt"}
     return render_template("home_page.html", dldid=int(time.time()), login=login_var)
 
 
@@ -190,9 +232,9 @@ def home_page():
 def about_page():
     access_key = request.cookies.get('token')
     if ADMIN_KEY != access_key:
-        login_var = {"name": "Login", "url": "login"}
+        login_var = {"name": "Login", "url": "login", "icon": "fa-sign-in-alt"}
     else:
-        login_var = {"name": "Logout", "url": "logout"}
+        login_var = {"name": "Logout", "url": "logout", "icon": "fa-sign-out-alt"}
 
     return render_template("about.html", dldid=int(time.time()), login=login_var)
 
@@ -204,9 +246,11 @@ def graphs():
     color_id = 0
     access_key = request.cookies.get('token')
     if ADMIN_KEY != access_key:
-        login_var = {"name": "Login", "url": "login"}
+        login_var = {"name": "Login", "url": "login", "icon": "fa-sign-in-alt"}
+        authorized = False
     else:
-        login_var = {"name": "Logout", "url": "logout"}
+        login_var = {"name": "Logout", "url": "logout", "icon": "fa-sign-out-alt"}
+        authorized = True
 
     plot_list = []
 
@@ -243,7 +287,8 @@ def graphs():
                     plot_data = {"date": year + "." + month, "plot": plot_html, "title": plot_title}
                     plot_list.append(plot_data)
 
-    response = make_response(render_template("graphs.html", plots=plot_list, login=login_var, dldid=int(time.time())))
+    response = make_response(render_template("graphs.html", plots=plot_list, login=login_var, auth=authorized,
+                                             dldid=int(time.time())))
 
     return response
 
@@ -258,8 +303,18 @@ def data_and_controls():
     if ADMIN_KEY != access_key:
         return redirect("/login")
     else:
-        login_var = {"name": "Logout", "url": "logout"}
+        login_var = {"name": "Logout", "url": "logout", "icon": "fa-sign-out-alt"}
         data_list = get_data()
+
+        if len(data_list) > 0:
+            last_timestamp = float(data_list[-1]['timestamp'])
+
+            most_recent_timestamp = datetime.strftime(datetime.fromtimestamp(last_timestamp), '%Y/%b/%d %H:%M:%S')
+            elapsed = time.strftime('%Hh, %Mm', time.gmtime(time.time() - last_timestamp))
+            most_recent_timestamp += ", elapsed: {}".format(elapsed)
+        else:
+            most_recent_timestamp = "No data available"
+
         new_list = []
         if data_list is not None:
             data_dict = {}
@@ -269,19 +324,13 @@ def data_and_controls():
                 data_dict[name] = data["value"]
 
             for name in data_dict.keys():
-                unit = ""
-                if "temperature" in name.lower():
-                    unit = "°C"
-                elif "moisture" in name.lower():
-                    unit = "%"
-                elif "humidity" in name.lower():
-                    unit = "%"
+                unit = get_units(name)
 
                 new_list.append({"name": name, "val": data_dict[name], "unit": unit})
         vars = get_all_variables()
 
         response = make_response(render_template("datactrl.html", dldid=int(time.time()), vars=vars,
-                                                 value_list=new_list, login=login_var))
+                                                 value_list=new_list, login=login_var, ts=most_recent_timestamp))
         response.set_cookie('token', ADMIN_KEY, max_age=1200)
 
         return response
@@ -301,7 +350,7 @@ def download_csv():
             name_data.append([date, value])
             data_dict[name] = name_data
 
-        f = open("data.csv", 'w')
+        f = open("/tmp/data.csv", 'w')
         for name in data_dict.keys():
             f.write("{} date, value\n".format(name))
             value = data_dict[name]
@@ -311,10 +360,9 @@ def download_csv():
 
         f.close()
 
-    return send_from_directory(app.root_path, 'data.csv')
+    return send_from_directory('/tmp', 'data.csv')
 
 
-# example query: /postdata?key=AdminSecretKey123&N=data_name&V=data_value
 @app.route('/postdata', methods=['GET'])
 def post_data():
     access_key = request.args.get('key', ' ')
@@ -324,14 +372,17 @@ def post_data():
 
     name = request.args.get('N', None)
     value = request.args.get('V', None)
+    unit = request.args.get('U', None)
 
     if name is not None and value is not None:
         save_data(name, value)
 
+        if unit is not None:
+            set_unit(name, unit)
+
     return 'ok'
 
 
-# example query: /setvar?key=AdminSecretKey123&N=var_name&V=var_value
 @app.route('/setvar', methods=['GET'])
 def set_var():
     access_key = request.args.get('key', ' ')
@@ -350,7 +401,6 @@ def set_var():
     return 'ok'
 
 
-# example query: /getvar?key=AdminSecretKey123&N=var_name
 @app.route('/getvar', methods=['GET'])
 def get_var():
     access_key = request.args.get('key', ' ')
@@ -370,7 +420,7 @@ def get_var():
 
 @app.route('/cleardata', methods=['GET'])
 def cleardata():
-    access_key = request.args.get('key', ' ')
+    access_key = request.cookies.get('token')
 
     if ADMIN_KEY == access_key:
         g.db.close()

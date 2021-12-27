@@ -267,13 +267,21 @@ a.text:hover{text-decoration:none}
 .switch-toggle {
     margin: 10px auto;
     width: auto;
-    display: table;
+    display: inline;
+}
+.switch-toggle p{
+    width: 50%;
+    float: left;
+    text-align: right;
+    padding: 0.2em 1em;
+    font-weight: bold;
 }
 .switch-toggle label {
     width: 80px;
     height: 30px;
     position: relative;
     display: block;
+    margin-left: 50%;
 }
 .switch-toggle label span {
     position: absolute;
@@ -300,12 +308,6 @@ a.text:hover{text-decoration:none}
 }
 .switch-toggle label input:checked + span:after{
  transform: translateX(50px);
-}
-
-.switch-toggle p{
-    position: absolute;
-    top: 0;
-    right: 150%;
 }
 
 .gen-var{

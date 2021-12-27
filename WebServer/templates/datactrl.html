@@ -1,24 +1,34 @@
+<html>
 
-<meta charset="utf-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Smart Irrigation</title>
-<link rel="stylesheet" href="{{url_for('static', filename='css/font-awesome.min.css')}}">
-<link rel="stylesheet" href="{{url_for('static', filename='css/bootstrap.min.css')}}">
-<link target="_blank" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
-<link target="_blank" href="https://fonts.googleapis.com/css?family=Open+Sans:400,700" rel="stylesheet">
-<link target="_blank" href="https://fonts.googleapis.com/css?family=Armata" rel="stylesheet">
-<link rel="stylesheet" href="{{url_for('static', filename='css/feedback4.css')}}">
-<link rel="stylesheet" href="{{url_for('static', filename='css/datactrl.css')}}">
-<script type="text/javascript" src="{{url_for('static', filename='js/custom.js')}}"></script>
-<link rel="stylesheet" href="{{url_for('static', filename='css/custom.css')}}">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
 
+	<title>Smart Irrigation</title>
+
+	<link rel="stylesheet" href="{{url_for('static', filename='css/font-awesome.min.css')}}">
+	<link rel="stylesheet" href="{{url_for('static', filename='css/bootstrap.min.css')}}">
+	<link target="_blank" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet">
+	<link target="_blank" href="https://fonts.googleapis.com/css?family=Open+Sans:400,700" rel="stylesheet">
+	<link target="_blank" href="https://fonts.googleapis.com/css?family=Armata" rel="stylesheet">
+	<link rel="stylesheet" href="{{url_for('static', filename='css/feedback4.css')}}">
+	<link rel="stylesheet" href="{{url_for('static', filename='css/datactrl.css')}}">
+	<script type="text/javascript" src="{{url_for('static', filename='js/custom.js')}}"></script>
+	<link rel="stylesheet" href="{{url_for('static', filename='css/custom.css')}}">
+</head>
+<body>
 <div class="header-container">
 	<div class="header-content">
 		<div class="container">
             <a href="/">
-            <img src="{{url_for('static', filename='images/envato-logo-small.svg')}}" alt="Smiley face" style="float:left;width:64px;height:64px;"></a>
-			<a id="login_link" href='/{{ login["url"] }}' >{{ login["name"] }}</a>
+            <img src="{{url_for('static', filename='images/envato-logo-small.svg')}}" alt="Smiley face" style="float:left;width:64px;height:64px;">
+			</a>
+
+			<a href="/">
+            <img src="{{url_for('static', filename='images/envato-logo-small.svg')}}" alt="Smiley face" style="float:right;width:64px;height:64px;">
+			</a>
+
 			<a class="img src" href="/" target="_blank"><h1>SMART IRRIGATION</h1></a><!--Logo Link-->
 
 			<div class="header-right">
@@ -32,6 +42,7 @@
 								<li><a href="/datactrl?dummy={{dldid}}">Data & Controlls</a></li>
 								<li><a href="/graphs?dummy={{dldid}}">Graphs</a></li>
 								<li><a href="/about">About Us</a></li>
+								<li><a href='/{{ login["url"] }}'>{{ login["name"] }}</a></li>
 							</ul>
 						</div>
 					</div>
@@ -46,6 +57,7 @@
 						<li><a href="/datactrl?dummy={{dldid}}">Data & Controlls</a></li>
 						<li><a href="/graphs?dummy={{dldid}}">Graphs</a></li>
 						<li><a href="/about">About Us</a></li>
+						<li><a href='/{{ login["url"] }}'>{{ login["name"] }}</a></li>
 					</ul>
 				</div>
 			</div>
@@ -57,26 +69,16 @@
 
 <div class="content">
 	<div class="container">
-		<div class="inner-row">
-			<div class="col-md-12 right-content">
-				<div class="panel-big-1 border-0">
-					<div class="right-content-1">
-						
-					</div>
-				</div>
-			</div>
-		</div>
-				
 		<div class="panel-big-2">
 			<h1 class="title-heading">CONTROLLS</h1>
-			<div class="text-section" >
+			<div class="text-section">
 				{% for key in vars.keys() %}
 				<div class="groupby"><p>{{ key }}</p></div>
 				{% for variable in vars[key] %}
 					{% if variable["type"] == "toggle" %}
 					<div class="switch-toggle">
+						<p>{{ variable["name"] }}</p>
 						<label onclick='toggleVar("{{ variable["name"] }}", "{{ variable["value"] }}")'>
-							<p>{{ variable["name"] }}</p>
 							<input type="checkbox" {% if variable["value"] == '0' %}{% else %}checked{% endif %}>
 							<span></span>
 						</label>
@@ -85,7 +87,7 @@
 					<div class="gen-var">
 						<label for='var_{{ variable["name"] }}'>{{ variable["name"] }}</label>
 						<input class="genvar" type="text" name = 'var_{{ variable["name"] }}' id='var_{{ variable["name"] }}'
-							   value='{{variable["value"]}}' onkeydown="save_value(this);"><br>
+							   value='{{variable["value"]}}' onkeydown="save_value(this);">
 					</div>
 					{% endif %}
 				<br><br>
@@ -96,29 +98,21 @@
 			<div class="panel-big-2">
 				<h1 class="title-heading">DATA</h1>
 				<div class="text-section">
-					
-						<table class="table eytable table-striped">
-							<tbody>
-								{% for variable in value_list %}
-								<tr><th> {{ variable["name"] }}</th>
-									<td>{{ variable["val"] }}{{ variable["unit"] }}</td>
-								</tr>
-								{% endfor %}
-								
-							</tbody>
-						</table>
-					
+					<table class="table eytable table-striped">
+						<tbody>
+							{% for variable in value_list %}
+							<tr><th> {{ variable["name"] }}</th>
+								<td>{{ variable["val"] }}{{ variable["unit"] }}</td>
+							</tr>
+							{% endfor %}
+						</tbody>
+					</table>
 				</div>
 			</div>
+
 		</div>
+		<p class="status-info">Last update: {{ts}}</p>
 	</div>
-
 </div>
-
-                                
-                                    
-                            
-                               
-                                                      
-
-				
+</body>
+</html>

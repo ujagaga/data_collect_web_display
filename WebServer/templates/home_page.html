@@ -1,4 +1,5 @@
-
+<html>
+<head>
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -10,14 +11,20 @@
 <link rel="stylesheet" href="{{url_for('static', filename='css/font-awesome.min.css')}}">
 <link rel="stylesheet" href="{{url_for('static', filename='css/home_page.css')}}">
 <link rel="stylesheet" href="{{url_for('static', filename='css/custom.css')}}">
-
+</head>
+<body>
 <div class="header-container">
 	
 	<div class="header-content">
 		<div class="container">
             <a href="/">
-            <img src="{{url_for('static', filename='images/envato-logo-small.svg')}}" alt="Smiley face" style="float:left;width:64px;height:64px;"></a>
-			<a id="login_link" href='/{{ login["url"] }}' >{{ login["name"] }}</a>
+            <img src="{{url_for('static', filename='images/envato-logo-small.svg')}}" alt="Smiley face" style="float:left;width:64px;height:64px;">
+			</a>
+
+			<a href="/">
+            <img src="{{url_for('static', filename='images/envato-logo-small.svg')}}" alt="Smiley face" style="float:right;width:64px;height:64px;">
+			</a>
+
 			<a class="img src" href="/" target="_blank"><h1>SMART IRRIGATION</h1></a><!--Logo Link-->
             
 			<div class="header-right">
@@ -31,6 +38,7 @@
 								<li><a href="/datactrl?dummy={{dldid}}">Data & Controlls</a></li>
 								<li><a href="/graphs?dummy={{dldid}}">Graphs</a></li>
 								<li><a href="/about">About Us</a></li>
+								<li><a href='/{{ login["url"] }}'>{{ login["name"] }}</a></li>
 							</ul>
 						</div>
 					</div>
@@ -45,6 +53,7 @@
 						<li><a href="/datactrl?dummy={{dldid}}">Data & Controlls</a></li>
 						<li><a href="/graphs?dummy={{dldid}}">Graphs</a></li>
 						<li><a href="/about">About Us</a></li>
+						<li><a href='/{{ login["url"] }}'>{{ login["name"] }}</a></li>
 					</ul>
 				</div>
 			</div>
@@ -53,105 +62,25 @@
 </div>
 
 
-</div>
-<p><br>
-<br>
-</p>
-</div>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<style>
-* {box-sizing: border-box;}
-body {font-family: Verdana, sans-serif;}
-.mySlides {display: none;}
-img {vertical-align: middle;}
-
-/* Slideshow container */
-.slideshow-container {
-  max-width: 1000px;
-  position: relative;
-  margin: auto;
-}
-
-/* Caption text */
-.text {
-  color: #f2f2f2;
-  font-size: 15px;
-  padding: 8px 12px;
-  position: absolute;
-  bottom: 8px;
-  width: 100%;
-  text-align: center;
-}
-
-/* Number text (1/3 etc) */
-.numbertext {
-  color: #f2f2f2;
-  font-size: 12px;
-  padding: 8px 12px;
-  position: absolute;
-  top: 0;
-}
-
-/* The dots/bullets/indicators */
-.dot {
-  height: 15px;
-  width: 15px;
-  margin: 0 2px;
-  background-color: #bbb;
-  border-radius: 50%;
-  display: inline-block;
-  transition: background-color 0.6s ease;
-}
-
-.active {
-  background-color: #717171;
-}
-
-/* Fading animation */
-.fade {
-  -webkit-animation-name: fade;
-  -webkit-animation-duration: 4.5s;
-  animation-name: fade;
-  animation-duration: 4.5s;
-}
-
-@-webkit-keyframes fade {
-  from {opacity: .4} 
-  to {opacity: 1}
-}
-
-@keyframes fade {
-  from {opacity: .4} 
-  to {opacity: 1}
-}
-
-/* On smaller screens, decrease text size */
-@media only screen and (max-width: 300px) {
-  .text {font-size: 11px}
-}
-</style>
-
-
-
-
 <!--Header End-->
+<br><br>
 <div class="slideshow-container">
 
     <div class="mySlides fade">
       
-      <img src="https://wallpaperaccess.com/full/627887.jpg" style="width:100%">
+      <img src="{{url_for('static', filename='images/img1.jpg')}}" style="width:100%">
       
     </div>
     
     <div class="mySlides fade">
       
-      <img src="https://wallpapercave.com/wp/wp8481112.jpg" style="width:100%">
+      <img src="{{url_for('static', filename='images/img2.jpg')}}" style="width:100%">
       
     </div>
     
     <div class="mySlides fade">
       
-      <img src="https://eskipaper.com/images/nature-wallpaper-31.jpg" style="width:100%">
+      <img src="{{url_for('static', filename='images/img3.jpg')}}" style="width:100%">
       
     </div>
     
@@ -217,18 +146,16 @@ img {vertical-align: middle;}
 						<div class="ft_vid">
 
                             
-<a target="youtube" href="https://www.youtube.com/watch?v=1MzNrX1ZvtQ">
-<img src="https://img.youtube.com/vi/1MzNrX1ZvtQ/maxresdefault.jpg">
-</a>
-<p class="ft_vid_head">VIDEO ABOUT OUR PROJECT</p>
+							<a target="youtube" href="https://www.youtube.com/watch?v=1MzNrX1ZvtQ">
+							<img src="https://img.youtube.com/vi/1MzNrX1ZvtQ/maxresdefault.jpg">
+							</a>
+							<p class="ft_vid_head">VIDEO ABOUT OUR PROJECT</p>
 
-</div>
+						</div>
 
-<style>.ft_vid { margin:.5em auto 0 auto; max-width:480px; font-family:arial; text-align:center; position:relative; min-height:120px; overflow:hidden; background-color:#555; }.ft_vid p { position:absolute; margin:0; color:white; background-color:rgba(0, 0, 0, .5); }.ft_vid .ft_vid_head { font-size:16px; width:100%; height:28px; line-height:28px; font-weight: 450;text-align:center; top:0; left:0; padding-left:10px; overflow:hidden; }.ft_vid .ft_vid_foot { font-size:11px; width:100%; bottom:22; left:0; }.ft_vid img { display:block; max-width:100%; border:0; }.ft_vid a:after { content:"\A0\25BA"; position:absolute; width:60px; height:50px; left:0; top:0; right:0; bottom:0; margin:auto; border:0; border-radius:10px; color:white; background:rgba(0, 0, 0, .6); font-size:24px; line-height:50px; cursor:pointer; }.ft_vid a:hover:after { background:#CC181E; }.ft_lnk_div { margin:-10px auto 0.5em auto; padding-top:5px; max-width:480px; font-family:arial; font-size:12px; text-align:center; position:relative; color:black; background:whitesmoke; }.ft_lnk { /* position:absolute; */ top:100%; left:0; width:100%; text-align:center; padding:.5em .2em; border:0; background:whitesmoke; }</style>
+						<style>.ft_vid { margin:.5em auto 0 auto; max-width:480px; font-family:arial; text-align:center; position:relative; min-height:120px; overflow:hidden; background-color:#555; }.ft_vid p { position:absolute; margin:0; color:white; background-color:rgba(0, 0, 0, .5); }.ft_vid .ft_vid_head { font-size:16px; width:100%; height:28px; line-height:28px; font-weight: 450;text-align:center; top:0; left:0; padding-left:10px; overflow:hidden; }.ft_vid .ft_vid_foot { font-size:11px; width:100%; bottom:22; left:0; }.ft_vid img { display:block; max-width:100%; border:0; }.ft_vid a:after { content:"\A0\25BA"; position:absolute; width:60px; height:50px; left:0; top:0; right:0; bottom:0; margin:auto; border:0; border-radius:10px; color:white; background:rgba(0, 0, 0, .6); font-size:24px; line-height:50px; cursor:pointer; }.ft_vid a:hover:after { background:#CC181E; }.ft_lnk_div { margin:-10px auto 0.5em auto; padding-top:5px; max-width:480px; font-family:arial; font-size:12px; text-align:center; position:relative; color:black; background:whitesmoke; }.ft_lnk { /* position:absolute; */ top:100%; left:0; width:100%; text-align:center; padding:.5em .2em; border:0; background:whitesmoke; }</style>
 					</div>
 				</div>
         
-<div class="panel-big-1";>
-	<h1 class="title-heading"></h1>
-</div>
-				
+</body>
+</html>

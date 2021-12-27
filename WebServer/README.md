@@ -21,10 +21,10 @@ The page "Data & Controlls" is protected by login credentials which can be chang
 To post new data, you will need the administration key. Find it next to login credentials as "ADMIN_KEY", then go to:
 
 
-     http://localhost:8000/postdata?key=AdminSecretKey123&N=data_name&V=data_value
+     http://localhost:8000/postdata?key=AdminSecretKey123&N=data_name&V=data_value&U=data_unit
 
-     e.g. http://localhost:8000/postdata?key=AdminSecretKey123&N=Temperature&V=25.4
-          http://localhost:8000/postdata?key=AdminSecretKey123&N=Humidity&V=30
+     e.g. http://localhost:8000/postdata?key=AdminSecretKey123&N=Temperature&V=25.4&U=°C
+          http://localhost:8000/postdata?key=AdminSecretKey123&N=Humidity&V=30&U=%
 
 
 You can use any HTML safe data_name and value. The timestamp will be automatically updated according to current time.
@@ -51,14 +51,21 @@ To retrieve a control variable value, go to "/getvar" page like:
 
 ## Sample urls
 
-http://localhost:8000/postdata?key=AdminSecretKey123&N=Temperature&V=24
-http://localhost:8000/postdata?key=AdminSecretKey123&N=Temperature&V=25
-http://localhost:8000/postdata?key=AdminSecretKey123&N=Temperature&V=26
+    http://localhost:8000/postdata?key=AdminSecretKey123&N=Temperature&V=24&U=°C
+    http://localhost:8000/postdata?key=AdminSecretKey123&N=Temperature&V=25
+    http://localhost:8000/postdata?key=AdminSecretKey123&N=Temperature&V=26
+    
+    http://localhost:8000/postdata?key=AdminSecretKey123&N=Humidity&V=20&U%
+    
+    http://localhost:8000/postdata?key=AdminSecretKey123&N=Moisture&V=20&U%
+    
+    http://localhost:8000/setvar?key=AdminSecretKey123&N=Activate Automatic Mode&V=1&G=Automatic Mode&T=toggle
+    http://localhost:8000/setvar?key=AdminSecretKey123&N=Minimum moisture&V=30&G=Automatic Mode
+    http://localhost:8000/setvar?key=AdminSecretKey123&N=Maximum moisture&V=30&G=Automatic Mode
+    http://localhost:8000/setvar?key=AdminSecretKey123&N=Water ON&V=30&G=Manual Mode&T=toggle
+    http://localhost:8000/setvar?key=AdminSecretKey123&N=Drip System&V=30&G=Manual Mode&T=toggle
+    http://localhost:8000/setvar?key=AdminSecretKey123&N=Sprinkler System&V=30&G=Manual Mode&T=toggle
 
-http://localhost:8000/setvar?key=AdminSecretKey123&N=Automatic mode activate&V=1&G=Automatic Mode&T=toggle
-http://localhost:8000/setvar?key=AdminSecretKey123&N=Minimum moisture&V=30&G=Automatic Mode
-http://localhost:8000/setvar?key=AdminSecretKey123&N=Maximum moisture&V=30&G=Automatic Mode
-http://localhost:8000/setvar?key=AdminSecretKey123&N=Water ON&V=30&G=Manual Mode&T=toggle
 
 ## Contact ##
 
