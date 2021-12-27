@@ -296,11 +296,15 @@ def data_and_controls():
     else:
         login_var = {"name": "Logout", "url": "logout", "icon": "fa-sign-out-alt"}
         data_list = get_data()
-        last_timestamp = float(data_list[-1]['timestamp'])
 
-        most_recent_timestamp = datetime.strftime(datetime.fromtimestamp(last_timestamp), '%Y/%b/%d %H:%M:%S')
-        elapsed = time.strftime('%Hh, %Mm', time.gmtime(time.time() - last_timestamp))
-        most_recent_timestamp += ", elapsed: {}".format(elapsed)
+        if len(data_list) > 0:
+            last_timestamp = float(data_list[-1]['timestamp'])
+
+            most_recent_timestamp = datetime.strftime(datetime.fromtimestamp(last_timestamp), '%Y/%b/%d %H:%M:%S')
+            elapsed = time.strftime('%Hh, %Mm', time.gmtime(time.time() - last_timestamp))
+            most_recent_timestamp += ", elapsed: {}".format(elapsed)
+        else:
+            most_recent_timestamp = "No data available"
 
         new_list = []
         if data_list is not None:
