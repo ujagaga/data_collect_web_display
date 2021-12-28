@@ -236,8 +236,7 @@ def home_page():
         login_var = {"name": "Login", "url": "login", "icon": "fa-sign-in-alt"}
     else:
         login_var = {"name": "Logout", "url": "logout", "icon": "fa-sign-out-alt"}
-
-    get_data("Temperature")
+    
     return render_template("home_page.html", dldid=int(time.time()), login=login_var)
 
 
