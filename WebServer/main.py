@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 
 from flask import Flask, request, render_template, Markup, send_from_directory, g, redirect, make_response
+from flask_socketio import SocketIO, emit
 import sys
 import os
 import sqlite3
@@ -8,6 +9,7 @@ import plotly
 from plotly.graph_objs import Scatter, Layout
 from datetime import datetime
 import time
+import json
 
 application = Flask(__name__, static_url_path='/static', static_folder='static')
 application.secret_key = "<g\x93E\xf3\xc6\xb8\xc4\x87\xff\xf6\x0fxD\x91\x13\x9e\xfe1+%\xa3"
@@ -18,6 +20,8 @@ ADMIN_PASS = "admin123"
 ADMIN_KEY = "AdminSecretKey123"     # An HTML safe string
 COLORS = ["#000000", "#A52A2A", "#7FFFD4", "#8A2BE2", "#D2691E", "#2F4F4F", "#008000"]
 color_id = 0
+
+socketio = SocketIO(application, cors_allowed_origins="*", async_mode='eventlet')
 
 
 def init_database():
@@ -131,12 +135,17 @@ def save_data(name, value):
         print("ERROR writing data to db on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
 
 
-def get_data():
+def get_data(name=None):
     data = None
 
     try:
-        sql = "SELECT * FROM data ORDER BY timestamp"
-        data = query_db(g.db, sql)
+        if name is not None:
+            sql = "SELECT * FROM data WHERE name = '{}' ORDER BY timestamp DESC".format(name)
+            data = query_db(g.db, sql, one=True)
+        else:
+            sql = "SELECT * FROM data ORDER BY timestamp"
+            data = query_db(g.db, sql)
+
     except Exception as exc:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         print("ERROR reading data on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
@@ -227,6 +236,8 @@ def home_page():
         login_var = {"name": "Login", "url": "login", "icon": "fa-sign-in-alt"}
     else:
         login_var = {"name": "Logout", "url": "logout", "icon": "fa-sign-out-alt"}
+
+    get_data("Temperature")
     return render_template("home_page.html", dldid=int(time.time()), login=login_var)
 
 
@@ -446,8 +457,39 @@ def logout():
     return response
 
 
+# Websockets setup
+@socketio.on('setvar', namespace='/websocket')
+def ws_set_var(access_key, name, value):
+
+    if ADMIN_KEY != access_key:
+        emit('setvar_status', 'unauthorized')
+    else:
+        g.db = sqlite3.connect(db_path)
+        set_variable(name, value)
+        value = get_variable(name)
+        g.db.close()
+
+        response_data = json.JSONEncoder().encode({"name": name, "value": value})
+        emit('var_set', response_data, broadcast=True)
+
+
+@socketio.on('setdata', namespace='/websocket')
+def ws_set_data(access_key, name, value):
+
+    if ADMIN_KEY != access_key:
+        emit('setdata_status', 'unauthorized')
+    else:
+        g.db = sqlite3.connect(db_path)
+        save_data(name, value)
+        variable = get_data(name)
+        g.db.close()
+        response_data = json.JSONEncoder().encode({"name": name, "value": variable["value"]})
+        emit('data_set', response_data, broadcast=True)
+
+
 if __name__ == '__main__':
     if not os.path.isfile(db_path):
         init_database()
 
-    application.run(host="0.0.0.0", port=WEB_PORT, debug=True)
+    # application.run(host="0.0.0.0", port=WEB_PORT, debug=True)
+    socketio.run(application, host='0.0.0.0', port=WEB_PORT, debug=True)
