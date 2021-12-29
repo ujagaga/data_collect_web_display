@@ -14,7 +14,6 @@
 	<link target="_blank" href="https://fonts.googleapis.com/css?family=Armata" rel="stylesheet">
 	<link rel="stylesheet" href="{{url_for('static', filename='css/feedback4.css')}}">
 	<link rel="stylesheet" href="{{url_for('static', filename='css/datactrl.css')}}">
-	<script type="text/javascript" src="{{url_for('static', filename='js/custom.js')}}"></script>
 	<link rel="stylesheet" href="{{url_for('static', filename='css/custom.css')}}">
 </head>
 <body>
@@ -78,16 +77,23 @@
 					{% if variable["type"] == "toggle" %}
 					<div class="switch-toggle">
 						<p>{{ variable["name"] }}</p>
-						<label onclick='toggleVar("{{ variable["name"] }}", "{{ variable["value"] }}")'>
-							<input type="checkbox" {% if variable["value"] == '0' %}{% else %}checked{% endif %}>
+						<label>
+							<input type="checkbox" {% if variable["value"] == '0' %}{% else %}checked{% endif %}
+							id="var_{{ variable['name'].replace(" ", "%20%") }}"
+							onclick="toggleVar('{{ variable['name'] }}', this);">
 							<span></span>
 						</label>
 					</div>
 					{% else %}
 					<div class="gen-var">
-						<label for='var_{{ variable["name"] }}'>{{ variable["name"] }}</label>
-						<input class="genvar" type="text" name = 'var_{{ variable["name"] }}' id='var_{{ variable["name"] }}'
-							   value='{{variable["value"]}}' onkeydown="save_value(this);">
+						<p>{{ variable["name"] }}</p>
+						<input class="genvar" type="text" name='var_{{ variable["name"] }}'
+						   id="var_{{ variable['name'].replace(' ', '%20%') }}"
+						   value='{{variable["value"]}}' onkeydown="process_keypress(this);">
+						<button class="apply-btn"
+							onclick="process_apply_button(this);"
+							id="btn_{{ variable['name'].replace(' ', '%20%') }}"
+							>Apply</button>
 					</div>
 					{% endif %}
 				<br><br>
@@ -115,4 +121,8 @@
 	</div>
 </div>
 </body>
+<script type="text/javascript" src="{{url_for('static', filename='js/socket.io.min.js')}}"></script>
+<script type="text/javascript" src="{{url_for('static', filename='js/jquery-3.6.0.min.js')}}"></script>
+<script type="text/javascript" src="{{url_for('static', filename='js/custom.js')}}"></script>
+
 </html>

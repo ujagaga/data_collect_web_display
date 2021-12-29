@@ -1,4 +1,7 @@
+#!/usr/bin/python3
+
 from flask import Flask, request, render_template, Markup, send_from_directory, g, redirect, make_response
+from flask_socketio import SocketIO, emit
 import sys
 import os
 import sqlite3
@@ -6,9 +9,10 @@ import plotly
 from plotly.graph_objs import Scatter, Layout
 from datetime import datetime
 import time
+import json
 
-app = Flask(__name__, static_url_path='/static', static_folder='static')
-app.secret_key = "<g\x93E\xf3\xc6\xb8\xc4\x87\xff\xf6\x0fxD\x91\x13\x9e\xfe1+%\xa3"
+application = Flask(__name__, static_url_path='/static', static_folder='static')
+application.secret_key = "<g\x93E\xf3\xc6\xb8\xc4\x87\xff\xf6\x0fxD\x91\x13\x9e\xfe1+%\xa3"
 db_path = "database.db"
 WEB_PORT = 8000
 ADMIN_USERNAME = "admin"
@@ -16,6 +20,8 @@ ADMIN_PASS = "admin123"
 ADMIN_KEY = "AdminSecretKey123"     # An HTML safe string
 COLORS = ["#000000", "#A52A2A", "#7FFFD4", "#8A2BE2", "#D2691E", "#2F4F4F", "#008000"]
 color_id = 0
+
+socketio = SocketIO(application, cors_allowed_origins="*", async_mode='eventlet')
 
 
 def init_database():
@@ -51,12 +57,12 @@ def exec_db(query):
         g.db.commit()
 
 
-@app.before_request
+@application.before_request
 def before_request():
     g.db = sqlite3.connect(db_path)
 
 
-@app.teardown_request
+@application.teardown_request
 def teardown_request(exception):
     if hasattr(g, 'db'):
         g.db.close()
@@ -129,12 +135,17 @@ def save_data(name, value):
         print("ERROR writing data to db on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
 
 
-def get_data():
+def get_data(name=None):
     data = None
 
     try:
-        sql = "SELECT * FROM data ORDER BY timestamp"
-        data = query_db(g.db, sql)
+        if name is not None:
+            sql = "SELECT * FROM data WHERE name = '{}' ORDER BY timestamp DESC".format(name)
+            data = query_db(g.db, sql, one=True)
+        else:
+            sql = "SELECT * FROM data ORDER BY timestamp"
+            data = query_db(g.db, sql)
+
     except Exception as exc:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         print("ERROR reading data on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
@@ -213,12 +224,12 @@ def create_plot(plot_title, data):
     return plot
 
 
-@app.route('/favicon.ico')
+@application.route('/favicon.ico')
 def favicon():
-    return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
+    return send_from_directory(os.path.join(application.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
 
 
-@app.route('/')
+@application.route('/')
 def home_page():
     access_key = request.cookies.get('token')
     if ADMIN_KEY != access_key:
@@ -228,7 +239,7 @@ def home_page():
     return render_template("home_page.html", dldid=int(time.time()), login=login_var)
 
 
-@app.route('/about')
+@application.route('/about')
 def about_page():
     access_key = request.cookies.get('token')
     if ADMIN_KEY != access_key:
@@ -239,7 +250,7 @@ def about_page():
     return render_template("about.html", dldid=int(time.time()), login=login_var)
 
 
-@app.route('/graphs')
+@application.route('/graphs')
 def graphs():
     global color_id
 
@@ -293,7 +304,7 @@ def graphs():
     return response
 
 
-@app.route('/datactrl')
+@application.route('/datactrl')
 def data_and_controls():
     global color_id
 
@@ -336,7 +347,7 @@ def data_and_controls():
         return response
 
 
-@app.route('/download')
+@application.route('/download')
 def download_csv():
     data_list = get_data()
     if data_list is not None:
@@ -363,7 +374,7 @@ def download_csv():
     return send_from_directory('/tmp', 'data.csv')
 
 
-@app.route('/postdata', methods=['GET'])
+@application.route('/postdata', methods=['GET'])
 def post_data():
     access_key = request.args.get('key', ' ')
 
@@ -383,7 +394,7 @@ def post_data():
     return 'ok'
 
 
-@app.route('/setvar', methods=['GET'])
+@application.route('/setvar', methods=['GET'])
 def set_var():
     access_key = request.args.get('key', ' ')
 
@@ -401,7 +412,7 @@ def set_var():
     return 'ok'
 
 
-@app.route('/getvar', methods=['GET'])
+@application.route('/getvar', methods=['GET'])
 def get_var():
     access_key = request.args.get('key', ' ')
 
@@ -418,7 +429,7 @@ def get_var():
     return 'none'
 
 
-@app.route('/cleardata', methods=['GET'])
+@application.route('/cleardata', methods=['GET'])
 def cleardata():
     access_key = request.cookies.get('token')
 
@@ -430,7 +441,7 @@ def cleardata():
     return redirect("/")
 
 
-@app.route('/login', methods=['GET', 'POST'])
+@application.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username = request.form.get("username", '')
@@ -448,15 +459,45 @@ def login():
     return response
 
 
-@app.route('/logout', methods=['GET'])
+@application.route('/logout', methods=['GET'])
 def logout():
     response = make_response(redirect("/"))
     response.set_cookie('token', '', max_age=0)
     return response
 
 
+# Websockets setup
+@socketio.on('setvar', namespace='/websocket')
+def ws_set_var(access_key, name, value):
+    if ADMIN_KEY != access_key:
+        emit('setvar_status', 'unauthorized')
+    else:
+        g.db = sqlite3.connect(db_path)
+        set_variable(name, value)
+        value = get_variable(name)
+        g.db.close()
+
+        response_data = json.JSONEncoder().encode({"name": name, "value": value})
+        emit('var_set', response_data, broadcast=True)
+
+
+@socketio.on('setdata', namespace='/websocket')
+def ws_set_data(access_key, name, value):
+
+    if ADMIN_KEY != access_key:
+        emit('setdata_status', 'unauthorized')
+    else:
+        g.db = sqlite3.connect(db_path)
+        save_data(name, value)
+        variable = get_data(name)
+        g.db.close()
+        response_data = json.JSONEncoder().encode({"name": name, "value": variable["value"]})
+        emit('data_set', response_data, broadcast=True)
+
+
 if __name__ == '__main__':
     if not os.path.isfile(db_path):
         init_database()
 
-    app.run(host="0.0.0.0", port=WEB_PORT, debug=True)
+    # app.run(host="0.0.0.0", port=WEB_PORT, debug=True)
+    socketio.run(application, host='0.0.0.0', port=WEB_PORT, debug=True)
