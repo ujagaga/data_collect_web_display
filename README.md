@@ -66,6 +66,7 @@ To retrieve a control variable value, go to "/getvar" page like:
     http://localhost:8000/setvar?key=AdminSecretKey123&N=Drip System&V=30&G=Manual Mode&T=toggle
     http://localhost:8000/setvar?key=AdminSecretKey123&N=Sprinkler System&V=30&G=Manual Mode&T=toggle
 
+
 ## Heroku Deployment ##
 
 To deploy this app on Heroku, create an account and follow their python deployment tutorial or steps outlined below.
@@ -93,6 +94,18 @@ To deploy this app on Heroku, create an account and follow their python deployme
    or via CLI: 
 
         heroku open
+
+
+## Additional Heroku CLI quick reference ##
+
+To list available apps:
+
+        heroku apps:list
+
+To delete an app:
+
+        heroku apps:destroy <app_name>
+
 
 ## Contact ##
 
