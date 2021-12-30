@@ -66,6 +66,33 @@ To retrieve a control variable value, go to "/getvar" page like:
     http://localhost:8000/setvar?key=AdminSecretKey123&N=Drip System&V=30&G=Manual Mode&T=toggle
     http://localhost:8000/setvar?key=AdminSecretKey123&N=Sprinkler System&V=30&G=Manual Mode&T=toggle
 
+## Heroku Deployment ##
+
+To deploy this app on Heroku, create an account and follow their python deployment tutorial or steps outlined below.
+
+1. Install git and prepare your git repository.
+2. Install Heroku CLI (on Ubuntu: sudo snap install heroku --classic).
+3. Open a console window.
+4. Clone your git repository: git clone <my_repo_url>. Alternatively navigate to already cloned repository.
+5. Login to Heroku by running:
+
+        heroku login
+
+6. Create your app:
+
+        heroku create <my_app_name>
+
+7. Push your app to Heroku
+
+        git push heroku <git_branch_name>
+
+8. Open your app via url: 
+
+        https://<my_app_name>.herokuapp.com
+
+   or via CLI: 
+
+        heroku open
 
 ## Contact ##
 
