@@ -75,9 +75,9 @@ To deploy this app on Heroku, create an account and follow their python deployme
 
         heroku create <my_app_name>
 
-7. Push your app to Heroku
+7. Push your app from custom branch to Heroku main branch
 
-        git push heroku <git_branch_name>
+        git push heroku <git_branch_name>:main
 
 8. Open your app via url: 
 
