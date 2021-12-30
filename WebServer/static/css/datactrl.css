@@ -348,3 +348,17 @@ a.text:hover{text-decoration:none}
     background: blue;
     color: white;
 }
+
+.title-btn{
+    float:right;
+    width: 200px;
+    color: white;
+    background-color: DodgerBlue;
+    text-align: center;
+    vertical-align: middle;
+    border-radius: 0.25rem;
+    transition: color .15s ease-in-out,background-color .15s ease-in-out,border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+    height: calc(1.5em + 10px);
+    margin: -8px 0;
+    padding: 8px;
+}

@@ -68,6 +68,15 @@ def teardown_request(exception):
         g.db.close()
 
 
+def clear_variables():
+    try:
+        sql = "DELETE FROM ctrl"
+        exec_db(sql)
+    except Exception as exc:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        print("ERROR reading data on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
+
+
 def get_variable(name):
     data = None
 
@@ -121,6 +130,15 @@ def set_variable(name, value, groupby="", var_type=""):
     except Exception as exc:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         print("ERROR writing data to db on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
+
+
+def clear_data():
+    try:
+        sql = "DELETE FROM data"
+        exec_db(sql)
+    except Exception as exc:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        print("ERROR reading data on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
 
 
 def save_data(name, value):
@@ -434,9 +452,17 @@ def cleardata():
     access_key = request.cookies.get('token')
 
     if ADMIN_KEY == access_key:
-        g.db.close()
-        os.remove(db_path)
-        init_database()
+        clear_data()
+
+    return redirect("/")
+
+
+@application.route('/clearvars', methods=['GET'])
+def clearvars():
+    access_key = request.cookies.get('token')
+
+    if ADMIN_KEY == access_key:
+        clear_variables()
 
     return redirect("/")
 
@@ -499,5 +525,5 @@ if __name__ == '__main__':
     if not os.path.isfile(db_path):
         init_database()
 
-    # app.run(host="0.0.0.0", port=WEB_PORT, debug=True)
+    # application.run(host="0.0.0.0", port=WEB_PORT, debug=True)
     socketio.run(application, host='0.0.0.0', port=WEB_PORT, debug=True)
