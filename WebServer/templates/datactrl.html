@@ -24,6 +24,9 @@
 	<div class="col-1">
 		<div class="data_view">
 			<h1 class="title-heading">CONTROLLS</h1>
+
+			<a href="/clearvars?id={{dldid}}"><i class="fa fa-trash-alt"></i> Clear Controls</a>
+
 			{% for key in vars.keys() %}
 			<div class="groupby">
 				<h2>{{ key }}</h2>
