@@ -1,6 +1,7 @@
 #include <ESP8266WiFi.h>
 #include <DHT.h>    // Install DHT11 Library and Adafruit Unified Sensor Library
 #include <ESP8266HTTPClient.h>
+#include <WiFiClient.h>
 #include "config.h"
 
 #define DHTPIN                      (2)    
@@ -20,6 +21,7 @@
 
 #define DHTTYPE    DHT11
 
+WiFiClient wificlient;
 DHT dht(DHTPIN, DHTTYPE);
 HTTPClient http;
 float minPercentage = 20; // Adjust for minimum percentage under which the relay is activated
@@ -43,7 +45,7 @@ String do_http_get_request(String url){
   if (WiFi.status() == WL_CONNECTED) { //Check WiFi connection status 
     HTTPClient http;  //Declare an object of class HTTPClient   
     
-    http.begin(url); 
+    http.begin(wificlient, url); 
     int httpCode = http.GET();  
  
     if (httpCode > 0) { //Check the returning code
