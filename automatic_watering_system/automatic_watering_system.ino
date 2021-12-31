@@ -1,4 +1,5 @@
 #include <ESP8266WiFi.h>
+#include <ESP8266WiFiMulti.h>
 #include <DHT.h>    // Install DHT11 Library and Adafruit Unified Sensor Library
 #include <ESP8266HTTPClient.h>
 #include <WiFiClient.h>
@@ -17,13 +18,12 @@
 #define SPRINKLER_VAR               "Sprinkler%20System"
 #define DRIP_VAR                    "Drip%20System"
 
-#define SENSOR_READ_TIMEOUT         (5)     // Read sensors every 5 seconds
+#define SENSOR_READ_TIMEOUT         (10)    
 
 #define DHTTYPE    DHT11
+ESP8266WiFiMulti WiFiMulti;
 
-WiFiClient wificlient;
 DHT dht(DHTPIN, DHTTYPE);
-HTTPClient http;
 float minPercentage = 20; // Adjust for minimum percentage under which the relay is activated
 float maxPercentage = 90;
 
@@ -40,20 +40,41 @@ bool dripSystemOn = false;
 
 
 String do_http_get_request(String url){
-  String result = "Error: No wifi connection.";
-  
-  if (WiFi.status() == WL_CONNECTED) { //Check WiFi connection status 
-    HTTPClient http;  //Declare an object of class HTTPClient   
-    
-    http.begin(wificlient, url); 
-    int httpCode = http.GET();  
- 
-    if (httpCode > 0) { //Check the returning code
-      String result = http.getString();
+  String result = "";
+  if ((WiFiMulti.run() == WL_CONNECTED)) {
+
+    WiFiClient client;
+    HTTPClient http;
+    //http.setTimeout(10000);
+
+    Serial.print("Trying url: ");
+    Serial.print(url);
+    Serial.print(". ");    
+
+    if (http.begin(client, url)) { 
+      // start connection and send HTTP header
+      int httpCode = http.GET();
+
+      // httpCode will be negative on error
+      if (httpCode > 0) {
+        // HTTP header has been send and Server response header has been handled
+        Serial.printf("[HTTP] GET code: %d\n", httpCode);
+        if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) {
+          result = http.getString();
+        }
+      } else {
+        result = "Error: [HTTP] GET failed: " + http.errorToString(httpCode);
+      }
+
+      http.end();
+    } else {
+      result = "Error: Unable to connect to " + url;
     }
- 
-    http.end();   //Close connection  
+  }else{
+    result = "Error: No wifi connection.";
   }
+
+return result;
 }
 
 /* Reads sensors and stores values in global variables to make them available in every function */
@@ -207,7 +228,7 @@ void process_settings(){
 void setup()
 {
 
-  Serial.begin(9600);
+  Serial.begin(115200);
 
   dht.begin();
   pinMode(LED_PIN, OUTPUT);
@@ -215,17 +236,19 @@ void setup()
   pinMode(DRIP_RELAY_PIN, OUTPUT);
   pinMode(MOISTURE_SENSOR_PIN, INPUT);
   
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  Serial.print("Connecting to Wi-Fi");
-  while (WiFi.status() != WL_CONNECTED)
-  {
-    Serial.print(".");
-    delay(300);
+  WiFi.mode(WIFI_STA);
+  WiFiMulti.addAP(SSID_1, PASS_1);
+  WiFiMulti.addAP(SSID_2, PASS_2);
+  
+  Serial.print( "\n\nConnecting" );
+  while ( WiFiMulti.run() != WL_CONNECTED ) {
+    delay ( 500 );
+    ESP.wdtFeed();
+    Serial.print ( "." );
   }
-  Serial.println();
-  Serial.print("Connected with IP: ");
-  Serial.println(WiFi.localIP());
-  Serial.println();
+  String IP =  WiFi.localIP().toString();
+  String wifi_statusMessage = "\nConnected to: " + WiFi.SSID() + String(". IP address: ") + IP;   
+  Serial.println(wifi_statusMessage);  
 }
 
 void loop() {
