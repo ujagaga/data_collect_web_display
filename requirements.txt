@@ -4,6 +4,7 @@ dnspython==2.1.0
 eventlet==0.33.0
 Flask==2.0.2
 Flask-SocketIO==5.1.1
+gevent-websocket
 greenlet==1.1.2
 itsdangerous==2.0.1
 Jinja2==3.0.3
