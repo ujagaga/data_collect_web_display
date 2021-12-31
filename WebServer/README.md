@@ -60,13 +60,28 @@ To retrieve a control variable value, go to "/getvar" page like:
     http://localhost:8000/setvar?key=AdminSecretKey123&N=Minimum moisture&V=30&G=Automatic Mode
     http://localhost:8000/setvar?key=AdminSecretKey123&N=Maximum moisture&V=30&G=Automatic Mode
     http://localhost:8000/setvar?key=AdminSecretKey123&N=Water ON&V=30&G=Manual Mode&T=toggle
+    http://localhost:8000/setvar?key=AdminSecretKey123&N=Drip System&V=30&G=Manual Mode&T=toggle
+    http://localhost:8000/setvar?key=AdminSecretKey123&N=Sprinkler System&V=30&G=Manual Mode&T=toggle
+
+
+    To use these links on an application deployed to a hosting service, just replace "http://localhost:8000" with your website url.
+
+
+## Heroku Deployment ##
 
 To deploy this app on Heroku, create an account and follow their python deployment tutorial or steps outlined below.
 
 1. Install git and prepare your git repository.
-2. Install Heroku CLI (on Ubuntu: sudo snap install heroku --classic).
+2. Install Heroku CLI 
+        - For windows download from: https://devcenter.heroku.com/articles/heroku-cli
+        - on Ubuntu: sudo snap install heroku --classic).
 3. Open a console window.
-4. Clone your git repository: git clone <my_repo_url>. Alternatively navigate to already cloned repository.
+4. Clone your git repository: 
+
+        git clone git@github.com:ujagaga/data_collect_web_display.git
+
+Alternatively navigate to already cloned repository.
+
 5. Login to Heroku by running:
 
         heroku login
@@ -86,6 +101,18 @@ To deploy this app on Heroku, create an account and follow their python deployme
    or via CLI: 
 
         heroku open
+
+
+## Additional Heroku CLI quick reference ##
+
+To list available apps:
+
+        heroku apps:list
+
+To delete an app:
+
+        heroku apps:destroy <app_name>
+
 
 ## Contact ##
 
