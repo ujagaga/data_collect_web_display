@@ -492,35 +492,6 @@ def logout():
     return response
 
 
-# # Websockets setup
-# @socketio.on('setvar', namespace='/websocket')
-# def ws_set_var(access_key, name, value):
-#     if ADMIN_KEY != access_key:
-#         emit('setvar_status', 'unauthorized')
-#     else:
-#         g.db = sqlite3.connect(db_path)
-#         set_variable(name, value)
-#         value = get_variable(name)
-#         g.db.close()
-#
-#         response_data = json.JSONEncoder().encode({"name": name, "value": value})
-#         emit('var_set', response_data, broadcast=True)
-#
-#
-# @socketio.on('setdata', namespace='/websocket')
-# def ws_set_data(access_key, name, value):
-#
-#     if ADMIN_KEY != access_key:
-#         emit('setdata_status', 'unauthorized')
-#     else:
-#         g.db = sqlite3.connect(db_path)
-#         save_data(name, value)
-#         variable = get_data(name)
-#         g.db.close()
-#         response_data = json.JSONEncoder().encode({"name": name, "value": variable["value"]})
-#         emit('data_set', response_data, broadcast=True)
-
-
 if not os.path.isfile(db_path):
     init_database()
 
