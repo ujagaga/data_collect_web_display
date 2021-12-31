@@ -1,7 +1,7 @@
 #ifndef CONFIG_H
 #define CONFIG_H
 
-#define WEB_SERVICE_ADDRESS         "http://smarthorti.herokuapp.com/"
+#define WEB_SERVICE_ADDRESS         "http://smarthorti.ohanacode-dev.com/"
 #define ADMIN_KEY                   "AdminSecretKey123"
 
 /* Define 2 WiFi AP to connect to in case one is not available. 
