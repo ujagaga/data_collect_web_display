@@ -11,6 +11,7 @@ from datetime import datetime
 import time
 import json
 
+TIME_ZONE_INCREMENT = 5
 application = Flask(__name__, static_url_path='/static', static_folder='static')
 application.secret_key = "<g\x93E\xf3\xc6\xb8\xc4\x87\xff\xf6\x0fxD\x91\x13\x9e\xfe1+%\xa3"
 db_path = "database.db"
@@ -143,7 +144,8 @@ def clear_data():
 
 def save_data(name, value):
     try:
-        ts = datetime.timestamp(datetime.now())
+        ts = time.time() + TIME_ZONE_INCREMENT * 3600
+
         sql = "INSERT INTO data (timestamp, name, value) VALUES ('{}', '{}', '{}')" \
               "".format(ts, name, value)
         exec_db(sql)
@@ -338,8 +340,9 @@ def data_and_controls():
         if len(data_list) > 0:
             last_timestamp = float(data_list[-1]['timestamp'])
 
+            current_timestamp = time.time() + TIME_ZONE_INCREMENT * 3600
             most_recent_timestamp = datetime.strftime(datetime.fromtimestamp(last_timestamp), '%Y/%b/%d %H:%M:%S')
-            elapsed = time.strftime('%Hh, %Mm', time.gmtime(time.time() - last_timestamp))
+            elapsed = time.strftime('%Hh, %Mm', time.gmtime(current_timestamp - last_timestamp))
             most_recent_timestamp += ", elapsed: {}".format(elapsed)
         else:
             most_recent_timestamp = "No data available"
