@@ -521,9 +521,9 @@ def ws_set_data(access_key, name, value):
         emit('data_set', response_data, broadcast=True)
 
 
-if __name__ == '__main__':
-    if not os.path.isfile(db_path):
-        init_database()
+if not os.path.isfile(db_path):
+    init_database()
 
+if __name__ == '__main__':
     # application.run(host="0.0.0.0", port=WEB_PORT, debug=True)
     socketio.run(application, host='0.0.0.0', port=WEB_PORT, debug=True)
