@@ -1,5 +1,3 @@
-var socket;
-
 function getCookie(cname) {
   let name = cname + "=";
   let decodedCookie = decodeURIComponent(document.cookie);
@@ -16,19 +14,40 @@ function getCookie(cname) {
   return "";
 }
 
-function toggleVar(name, caller){
-    key = getCookie("token");
-    var value = 0;
-    if(caller.checked){
-        value = 1;
-    }
-    console.log("toggleVar " + name + ":" + value);
-    socket.emit('setvar', key, name, value);
+function http_get_request(url){
+
+    console.log("REQUESTING: " + url);
+    var retVal = "ERR";
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+        console.log(this.readyState + " | " + this.status + " | " + xhttp.responseText);
+    };
+    xhttp.open("GET", url, true);
+    xhttp.send();
 }
 
 function saveVar(name, value) {
     key = getCookie("token");
-    socket.emit('setvar', key, name, value);
+    var url = "/setvar?key=" + key + "&N=" + name + "&V=" + value;
+    url = url.replaceAll(' ', '%20');
+
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+
+        if (xhttp.readyState == 4 && xhttp.status == 200){
+            location.reload();
+        }
+    };
+    xhttp.open("GET", url, true);
+    xhttp.send();
+}
+
+function toggleVar(name, caller){
+    var value = 0;
+    if(caller.checked){
+        value = 1;
+    }
+    saveVar(name, value);
 }
 
 function process_apply_button(ele){
@@ -37,7 +56,6 @@ function process_apply_button(ele){
 
     var value = document.getElementById(inputId).value;
     saveVar(name, value);
-    ele.style.display = "none";
 }
 
 function process_keypress(ele) {
@@ -45,33 +63,9 @@ function process_keypress(ele) {
     if(event.key === 'Enter') {
         var name = ele.id.replace("var_", "").replaceAll("%20%", " ");
         saveVar(name, ele.value);
-        document.getElementById(applyBtnId).style.display = "none";
     }else{
         // Show apply button
         console.log(applyBtnId);
         document.getElementById(applyBtnId).style.display = "block";
     }
 }
-
-$(document).ready(function(){
-    socket = io.connect('/websocket');
-
-    socket.on('var_set', function(msg) {
-        try {
-            var resp = JSON.parse(msg);
-
-            if(resp.hasOwnProperty('name')){
-                var varId = "var_" + resp.name.replaceAll(" ", "%20%");
-                var checked = resp.value != 0;
-
-                document.getElementById(varId).checked = checked;
-                document.getElementById(varId).value = resp.value;
-            }generate
-        }
-        catch (e) {
-            console.log("Error parsing json: " + msg);
-            console.log(e);
-        }
-    });
-
-});
