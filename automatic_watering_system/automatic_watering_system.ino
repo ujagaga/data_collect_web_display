@@ -204,10 +204,8 @@ void process_settings(){
   if(relayAutomaticMode){
     if(percentage < minPercentage){
       digitalWrite(SPRINKLER_RELAY_PIN, HIGH);
-      digitalWrite(DRIP_RELAY_PIN, HIGH);
     }else if(percentage > maxPercentage){
       digitalWrite(SPRINKLER_RELAY_PIN, LOW);
-      digitalWrite(DRIP_RELAY_PIN, LOW);
     }
   }else{
     if(sprinklerSystemOn){
@@ -215,12 +213,12 @@ void process_settings(){
     }else{
       digitalWrite(SPRINKLER_RELAY_PIN, LOW);
     }
+  }
 
-    if(dripSystemOn){
-      digitalWrite(DRIP_RELAY_PIN, HIGH);
-    }else{
-      digitalWrite(DRIP_RELAY_PIN, LOW);
-    }
+  if(dripSystemOn){
+    digitalWrite(DRIP_RELAY_PIN, HIGH);
+  }else{
+    digitalWrite(DRIP_RELAY_PIN, LOW);
   }
 }
 
