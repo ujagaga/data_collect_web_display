@@ -114,6 +114,10 @@ To delete an app:
         heroku apps:destroy <app_name>
 
 
+## NOTE ##
+
+Currently this web service uses an SQLite database which requires no additional setup, so it is convenient for local developping. The downside is that Heroku writes to RAM, so when the app is shut down, the data is errased. Using another hosting that has physical file system will save the database, If you wish for this to run on Heroku, you will need to modify the code to use Heroku provided Postgree database.
+
 ## Contact ##
 
 * web: http://www.radinaradionica.com
