@@ -123,6 +123,21 @@ void read_data(){
   String baseGetUrl = String(WEB_SERVICE_ADDRESS) + "getvar?key=" + String(ADMIN_KEY) + "&N=";
   String baseSetUrl = String(WEB_SERVICE_ADDRESS) + "setvar?key=" + String(ADMIN_KEY);
 
+  // get automatic mode and set it if unset
+  url = baseGetUrl + String(AUTOMATIC_VAR);
+  Serial.print("Fetching automatic mode setting: ");  
+  result = do_http_get_request(url);
+  Serial.println(result);
+  
+  if(result.startsWith("none")){
+    Serial.println("Automatic mode not set. Setting initial value:");
+    url = baseSetUrl + "&G=Automatic%20Mode&T=toggle&N=" + String(AUTOMATIC_VAR) + "&V=" + String(int(relayAutomaticMode));
+    result = do_http_get_request(url);
+    Serial.println(result);
+  }else{
+    relayAutomaticMode = bool(result.toInt());
+  } 
+  
   // get minimum moisture and set it if unset
   url = baseGetUrl + String(MIN_MOIST_VAR);
   Serial.print("Fetching minimum moisture level: ");  
@@ -146,26 +161,11 @@ void read_data(){
   
   if(result.startsWith("none")){
     Serial.println("Maximum moisture percentage not set. Setting initial value:");
-    url = baseSetUrl + "&G=Automatic%20Mode&" + String(MAX_MOIST_VAR) + "&V=" + String(maxPercentage);
+    url = baseSetUrl + "&G=Automatic%20Mode&N=" + String(MAX_MOIST_VAR) + "&V=" + String(maxPercentage);
     result = do_http_get_request(url);
     Serial.println(result);
   }else{
     maxPercentage = result.toFloat();
-  }  
-  
-  // get automatic mode and set it if unset
-  url = baseGetUrl + String(AUTOMATIC_VAR);
-  Serial.print("Fetching automatic mode setting: ");  
-  result = do_http_get_request(url);
-  Serial.println(result);
-  
-  if(result.startsWith("none")){
-    Serial.println("Automatic mode not set. Setting initial value:");
-    url = baseSetUrl + "&G=Automatic%20Mode&T=toggle&N=" + String(AUTOMATIC_VAR) + "&V=" + String(int(relayAutomaticMode));
-    result = do_http_get_request(url);
-    Serial.println(result);
-  }else{
-    relayAutomaticMode = bool(result.toInt());
   } 
   
   // get sprinkler system and set it if unset 
@@ -223,7 +223,6 @@ void process_settings(){
     }
   }
 }
-
 
 void setup()
 {
