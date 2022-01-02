@@ -75,7 +75,7 @@ a, a:visited, a:hover, p {
     font-size: 30px;
 }
 
-.status-info{
+#status-info{
     position: absolute;
     bottom: 0;
     right: 10px;

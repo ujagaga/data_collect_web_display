@@ -69,3 +69,24 @@ function process_keypress(ele) {
         document.getElementById(applyBtnId).style.display = "block";
     }
 }
+
+$(document).ready(function() {
+
+    var lastTs = parseInt($("#last_ts").val(), 10);
+    if(lastTs){
+        var utcTs = new Date().getTime();
+        var elapsed = Math.floor((utcTs - lastTs) / 1000);
+        var h = Math.floor(elapsed / 3600);
+        var rem = elapsed % 3600;
+        var m = Math.floor(rem / 60);
+        var s = rem % 60;
+
+        var lastDate = new Date(lastTs);
+        var dateFormat = {year: 'numeric', month: 'long', day: 'numeric' };
+
+        var status = " Last update at: " +  lastDate.toLocaleDateString("en-US", dateFormat) + ", " +
+        lastDate.toLocaleTimeString("en-US") + " Elapsed:" + h + ":" + m + ":" + s;
+
+        $("#status-info").text(status);
+    }
+});
