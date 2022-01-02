@@ -10,7 +10,6 @@ from datetime import datetime
 import time
 import json
 
-TIME_ZONE_INCREMENT = 5
 application = Flask(__name__, static_url_path='/static', static_folder='static')
 application.secret_key = "<g\x93E\xf3\xc6\xb8\xc4\x87\xff\xf6\x0fxD\x91\x13\x9e\xfe1+%\xa3"
 db_path = "database.db"
@@ -57,6 +56,9 @@ def exec_db(query):
 
 @application.before_request
 def before_request():
+    if not os.path.isfile(db_path):
+        init_database()
+
     g.db = sqlite3.connect(db_path)
 
 
@@ -141,7 +143,7 @@ def clear_data():
 
 def save_data(name, value):
     try:
-        ts = time.time() + TIME_ZONE_INCREMENT * 3600
+        ts = time.time()
 
         sql = "INSERT INTO data (timestamp, name, value) VALUES ('{}', '{}', '{}')" \
               "".format(ts, name, value)
@@ -335,14 +337,9 @@ def data_and_controls():
         data_list = get_data()
 
         if len(data_list) > 0:
-            last_timestamp = float(data_list[-1]['timestamp'])
-
-            current_timestamp = time.time() + TIME_ZONE_INCREMENT * 3600
-            most_recent_timestamp = datetime.strftime(datetime.fromtimestamp(last_timestamp), '%Y/%b/%d %H:%M:%S')
-            elapsed = time.strftime('%Hh, %Mm', time.gmtime(current_timestamp - last_timestamp))
-            most_recent_timestamp += ", elapsed: {}".format(elapsed)
+            last_timestamp = int(float(data_list[-1]['timestamp']) * 1000)
         else:
-            most_recent_timestamp = "No data available"
+            last_timestamp = "No data available"
 
         new_list = []
         if data_list is not None:
@@ -359,7 +356,7 @@ def data_and_controls():
         vars = get_all_variables()
 
         response = make_response(render_template("datactrl.html", dldid=int(time.time()), vars=vars,
-                                                 value_list=new_list, login=login_var, ts=most_recent_timestamp))
+                                                 value_list=new_list, login=login_var, ts=last_timestamp))
         response.set_cookie('token', ADMIN_KEY, max_age=1200)
 
         return response
@@ -491,9 +488,6 @@ def logout():
     response.set_cookie('token', '', max_age=0)
     return response
 
-
-if not os.path.isfile(db_path):
-    init_database()
 
 if __name__ == '__main__':
     application.run(host="0.0.0.0", port=WEB_PORT, debug=True)
