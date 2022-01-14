@@ -1,0 +1,17 @@
+"""
+Rename this file as "app_cfg.py" and adjust your configuration
+"""
+
+from enum import Enum
+
+
+class AppConfig(Enum):
+    APP_URL = "your.web.domain"
+    MAIL_SERVER = "your.mail.server",
+    MAIL_PORT = 26,
+    MAIL_USE_TLS = False,
+    MAIL_USE_SSL = False,
+    MAIL_USERNAME = "your.default.username",
+    MAIL_PASSWORD = "your.email.password",
+    MAIL_DEFAULT_SENDER = "email_of@default.sender"
+    WEB_PORT = 8000

@@ -11,26 +11,30 @@ import time
 import hashlib
 import secrets
 from flask_mail import Mail, Message
+from app_cfg import AppConfig
 
 
 application = Flask(__name__, static_url_path='/static', static_folder='static')
 application.config.update(
     TESTING=False,
-    SECRET_KEY="123DataCollectorSecretKey131313",
-    #SERVER_NAME="datacollect.ohanacode-dev.com",
-    SESSION_COOKIE_DOMAIN="datacollect.ohanacode-dev.com",
-    SESSION_TYPE="redis"
-
+    SECRET_KEY="RandomlyGenerated_1234asdfhg3324r89u7dsfkjdsbvc",
+    #SERVER_NAME=AppConfig.APP_URL,
+    SESSION_COOKIE_DOMAIN=AppConfig.APP_URL,
+    SESSION_TYPE="redis",
+    MAIL_SERVER=AppConfig.MAIL_SERVER,
+    MAIL_PORT=AppConfig.MAIL_PORT,
+    MAIL_USE_TLS=AppConfig.MAIL_USE_TLS,
+    MAIL_USE_SSL=AppConfig.MAIL_USE_SSL,
+    MAIL_USERNAME=AppConfig.MAIL_USERNAME,
+    MAIL_PASSWORD=AppConfig.MAIL_PASSWORD,
+    MAIL_DEFAULT_SENDER=AppConfig.MAIL_DEFAULT_SENDER
 )
 mail = Mail(application)
 db_path = "database.db"
-WEB_PORT = 8000
-ADMIN_USERNAME = "admin"
-ADMIN_PASS = "admin123"
-ADMIN_KEY = "AdminSecretKey123"     # An HTML safe string
+WEB_PORT = AppConfig.WEB_PORT
 COLORS = ["#000000", "#A52A2A", "#7FFFD4", "#8A2BE2", "#D2691E", "#2F4F4F", "#008000"]
 color_id = 0
-APP_URL = "ohanacodedata.com"
+APP_URL = AppConfig.APP_URL
 
 
 def pwd_encrypt(password):
@@ -132,6 +136,8 @@ def set_user(email=None, apikey=None, password=None, resetcode=None):
                 sql = "UPDATE users SET password = '{}' WHERE email = '{}'".format(password, email)
             elif resetcode is not None:
                 sql = "UPDATE users SET resetcode = '{}' WHERE email = '{}'".format(resetcode, email)
+            elif email is not None and apikey is not None:
+                sql = "UPDATE users SET apikey = '{}' WHERE email = '{}'".format(apikey, email)
             else:
                 print("ERROR: Nothing to do with user. No password or resetcode specified.")
                 return
@@ -328,7 +334,17 @@ def create_plot(plot_title, data):
     return plot
 
 
-def send_activation_email(user):
+def send_password_reset_email(user):
+    resetcode = user['resetcode']
+    title = "{} Activation".format(APP_URL)
+
+    message = "<p>You requested a new account or password reset.</p>" \
+              "<p>Please click <a href=https://{}/resetpass?resetcode={}&email=user['email']>here</a> to set new password.</p>" \
+              "".format(APP_URL, resetcode)
+
+    msg = Message(title,  recipients=[user['email']], html=message)
+    mail.send(msg)
+
     return 'An activation email was sent to your address. Please follow the link provided to set your password.'
 
 
@@ -569,17 +585,44 @@ def register():
         if email != '':
             user = set_user(email=email)
             if user is not None:
-                status_msg = send_activation_email(user)
+                status_msg = send_password_reset_email(user)
             return redirect(url_for('home_page', message=status_msg))
 
     response = make_response(render_template('new_account.html'))
     return response
 
 
+@application.route('/resetpass', methods=['GET'])
+def resetpass():
+    resetcode = request.args.get('resetcode', '')
+    email = request.args.get('email', '')
+
+    if email != "" and resetcode != "":
+        user = get_user(email=email)
+        if user is not None and user["resetcode"] == resetcode:
+            apikey = user["apikey"]
+            if len(apikey) < 16:
+                apikey = generate_token()
+                return redirect(url_for('activate', apikey=apikey))
+            else:
+                status_msg = "Your password was successfully reset. You may now login using the new password."
+                return redirect(url_for('home_page', message=status_msg))
+
+    status_msg = "An error occurred while setting your password. Are you sure you followed the right link?"
+    return redirect(url_for('home_page', message=status_msg))
+
+
 @application.route('/logout', methods=['GET'])
 def logout():
     response = make_response(redirect("/"))
     response.set_cookie('token', '', max_age=0)
+    return response
+
+
+@application.route('/activate', methods=['GET'])
+def activate():
+    apikey = request.args.get('apikey')
+    response = make_response(render_template('activate_confirmation_page.html', apikey=apikey))
     return response
 
 

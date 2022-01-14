@@ -2,3 +2,4 @@
 *.csv
 *.db
 venv
+*app_cfg.py
