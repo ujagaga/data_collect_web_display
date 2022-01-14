@@ -18,7 +18,7 @@ Deploy it anywhere and go to url or IP address like
 
 
 Check the "templates" folder and adjust the html for your pages.
-The page "Data & Controlls" is protected by login credentials which can be changed at the top of the "main.py" file, just look for "ADMIN_USERNAME" and "ADMIN_PASS". 
+The page "Data & Controls" is protected by login credentials which can be changed at the top of the "main.py" file, just look for "ADMIN_USERNAME" and "ADMIN_PASS". 
 To post new data, you will need the administration key. Find it next to login credentials as "ADMIN_KEY", then go to:
 
 
@@ -41,8 +41,10 @@ As you can see from above example, a control variable can have the following att
     N ... name
     V ... value
     G ... group to use to group multiple variables
-    T ... type of the variable. The only supported type is "toggle". 
-            If toggle type is set, the variable will be displayed with a toggle button. If omitted, it will be displayed with a value.
+    T ... type of the variable. The supported types are "toggle" and "semaphore". You can use just the first letter (t or s).
+            If toggle type is set, the variable will be displayed with a toggle button. 
+            If semaphore type is set, the variable will be displayed as an LED.
+            If no type is set, it will be displayed as an editable input box value.
             
 To retrieve a control variable value, go to "/getvar" page like:
 
@@ -63,9 +65,12 @@ To retrieve a control variable value, go to "/getvar" page like:
     http://localhost:8000/setvar?key=AdminSecretKey123&N=Drip System&V=30&G=Manual Mode&T=toggle
     http://localhost:8000/setvar?key=AdminSecretKey123&N=Sprinkler System&V=30&G=Manual Mode&T=toggle
 
+    http://localhost:8000/setvar?key=AdminSecretKey123&N=Sprinkler relay activated&V=1&T=semaphore
+
 
     To use these links on an application deployed to a hosting service, just replace "http://localhost:8000" with your website url.
-
+    NOTE: An url must be HTML safe, so all spaces need to be replaced with "%20". Your web browser will do this automatically, 
+    but when unsing in Arduino code, you will need to adjust the strings yourself. 
 
 ## Heroku Deployment ##
 

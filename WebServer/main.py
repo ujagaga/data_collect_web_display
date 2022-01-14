@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from flask import Flask, request, render_template, Markup, send_from_directory, g, redirect, make_response, flash
+from flask import Flask, request, render_template, Markup, send_from_directory, g, redirect, make_response, flash, url_for
 import sys
 import os
 import sqlite3
@@ -17,16 +17,10 @@ application = Flask(__name__, static_url_path='/static', static_folder='static')
 application.config.update(
     TESTING=False,
     SECRET_KEY="123DataCollectorSecretKey131313",
-    SERVER_NAME="datacollect.ohanacode-dev.com",
+    #SERVER_NAME="datacollect.ohanacode-dev.com",
     SESSION_COOKIE_DOMAIN="datacollect.ohanacode-dev.com",
-    SESSION_TYPE="redis",
-    MAIL_SERVER="mail.ohanacode-dev.com",
-    MAIL_PORT=26,
-    MAIL_USE_TLS=False,
-    MAIL_USE_SSL=False,
-    MAIL_USERNAME="rada.berar@ohanacode-dev.com",
-    MAIL_PASSWORD="prokletamasina13",
-    MAIL_DEFAULT_SENDER="rada.berar@ohanacode-dev.com"
+    SESSION_TYPE="redis"
+
 )
 mail = Mail(application)
 db_path = "database.db"
@@ -74,7 +68,7 @@ def init_database():
         db.execute(sql)
         db.commit()
 
-        sql = "create table users (id int NOT NULL AUTO_INCREMENT, email TEXT, pass TEXT, apikey TEXT, resetcode TEXT)"
+        sql = "create table users (email  TEXT, pass TEXT, apikey TEXT, resetcode TEXT)"
         db.execute(sql)
         db.commit()
 
@@ -350,7 +344,9 @@ def home_page():
         login_var = {"name": "Login", "url": "login", "icon": "fa-sign-in-alt"}
     else:
         login_var = {"name": "Logout", "url": "logout", "icon": "fa-sign-out-alt"}
-    return render_template("home_page.html", dldid=int(time.time()), login=login_var, app_url=APP_URL)
+
+    message = request.args.get('message')
+    return render_template("home_page.html", dldid=int(time.time()), login=login_var, app_url=APP_URL, message=message)
 
 
 @application.route('/graphs')
@@ -574,9 +570,7 @@ def register():
             user = set_user(email=email)
             if user is not None:
                 status_msg = send_activation_email(user)
-                flash(status_msg)
-            response = make_response(redirect("/"))
-            return response
+            return redirect(url_for('home_page', message=status_msg))
 
     response = make_response(render_template('new_account.html'))
     return response

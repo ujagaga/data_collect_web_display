@@ -77,8 +77,10 @@
 				G ... optional group to use to group multiple variables
 			</li>
 			<li>
-				T ... type of the variable. The only supported type is "toggle".
-            	If toggle type is set, the variable will be displayed as a toggle button. If omitted, it will be displayed as an input box value.
+				T ... type of the variable. The supported types are "toggle" and "semaphore".
+            	If toggle type is set, the variable will be displayed as a toggle button.
+				If semaphore type is set, the variable will be displayed as an LED.
+				If no type is specified, it will be displayed as an editable input box value.
 			</li>
 		</ul>
 		<p>Good use of a simple data variable (non toggle) for out heater example would be a target temperature like:</p>
@@ -105,13 +107,10 @@
 	email: <a href="mailto:ujagaga@gmail.com">ujagaga@gmail.com</a>
 </div>
 
-{% with messages = get_flashed_messages() %}
-  {% if messages %}
-    {% for message in messages %}
-	<input type="hidden" id="popup" value="{{ message }}">
-    {% endfor %}
-  {% endif %}
-{% endwith %}
+{% if message %}
+<input type="hidden" id="popup" value="{{ message }}">
+{% endif %}
+
 </body>
 <script type="text/javascript" src="{{url_for('static', filename='js/jquery-3.6.0.min.js')}}"></script>
 <script type="text/javascript" src="{{url_for('static', filename='js/home.js')}}"></script>

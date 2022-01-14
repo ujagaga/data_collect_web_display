@@ -32,7 +32,7 @@
 				<h2>{{ key }}</h2>
 				{% for variable in vars[key] %}
 
-				{% if variable["type"] == "toggle" %}
+				{% if variable["type"].startswith("t") %}
 				<div class="toggle-var">
 					<p>{{ variable["name"] }}</p>
 					<label>
@@ -41,6 +41,16 @@
 						onclick="toggleVar('{{ variable['name'] }}', this);">
 						<span class="slider"></span>
 					</label>
+				</div>
+				{% if variable["type"].startswith("s") %}
+				<div class="semaphore-var">
+					<p>{{ variable["name"] }}</p>
+
+					{% if variable["value"] == '0' %}
+					<div class="semaphore-off"></div>
+					{% else %}
+					<div class="semaphore-on"></div>
+					{% endif %}
 				</div>
 				{% else %}
 				<div class="gen-var">

@@ -16,15 +16,17 @@
 </div>
     <div class="grid">
         <div class="col-1">
-            <form name="loginfrm" id="login-frm" method="POST" action="/register" autocomplete="off">
-                <p>Please provide your email address. It will be used only to send you the activation link or to reset password.<br>
+            <p>Please provide your email address. It will be used only to send you the activation link or to reset password.<br>
                 There will be no spam or news from this service.</p>
+            <form name="loginfrm" id="login-frm" method="POST" action="/register" autocomplete="off">
                 <input type = "text" name = "email" placeholder="Email" id="email"  autofocus autocomplete="off"><br>
                 <input type = "submit" class="btn login-btn" value="Register">
             </form>
         </div>
     </div>
 </body>
+<script type="text/javascript" src="{{url_for('static', filename='js/jquery-3.6.0.min.js')}}"></script>
+<script type="text/javascript" src="{{url_for('static', filename='js/register.js')}}"></script>
 </html>
 
 

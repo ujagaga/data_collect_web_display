@@ -25,7 +25,7 @@
     position: relative;
 }
 
-.toggle-var, .gen-var{
+.toggle-var, .gen-var, .semaphore-var{
     width: 100%;
     padding: 0;
     display: inline-block;
@@ -33,7 +33,7 @@
     margin: 10px 0;
 }
 
-.toggle-var p, .gen-var p{
+.toggle-var p, .gen-var p, .semaphore-var p{
     margin: 0;
     padding: 0;
     width: 50%;
@@ -112,4 +112,21 @@ input:checked + .slider:before {
     top: 0;
     right: 10px;
     display: none;
+}
+
+.semaphore-off, .semaphore-on{
+    position: absolute;
+    width: 34px;
+    height: 34px;
+    top: 0;
+    left: calc(50% + 20px);
+    border: 2px solid #3a3a3a;
+}
+
+.semaphore-off {
+    background-color: whitesmoke;
+}
+
+.semaphore-on {
+    background-color: green;
 }
