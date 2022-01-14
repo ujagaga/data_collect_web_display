@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from flask import Flask, request, render_template, Markup, send_from_directory, g, redirect, make_response
+from flask import Flask, request, render_template, Markup, send_from_directory, g, redirect, make_response, flash
 import sys
 import os
 import sqlite3
@@ -8,10 +8,27 @@ import plotly
 from plotly.graph_objs import Scatter, Layout
 from datetime import datetime
 import time
-import json
+import hashlib
+import secrets
+from flask_mail import Mail, Message
+
 
 application = Flask(__name__, static_url_path='/static', static_folder='static')
-application.secret_key = "<g\x93E\xf3\xc6\xb8\xc4\x87\xff\xf6\x0fxD\x91\x13\x9e\xfe1+%\xa3"
+application.config.update(
+    TESTING=False,
+    SECRET_KEY="123DataCollectorSecretKey131313",
+    SERVER_NAME="datacollect.ohanacode-dev.com",
+    SESSION_COOKIE_DOMAIN="datacollect.ohanacode-dev.com",
+    SESSION_TYPE="redis",
+    MAIL_SERVER="mail.ohanacode-dev.com",
+    MAIL_PORT=26,
+    MAIL_USE_TLS=False,
+    MAIL_USE_SSL=False,
+    MAIL_USERNAME="rada.berar@ohanacode-dev.com",
+    MAIL_PASSWORD="prokletamasina13",
+    MAIL_DEFAULT_SENDER="rada.berar@ohanacode-dev.com"
+)
+mail = Mail(application)
 db_path = "database.db"
 WEB_PORT = 8000
 ADMIN_USERNAME = "admin"
@@ -19,6 +36,25 @@ ADMIN_PASS = "admin123"
 ADMIN_KEY = "AdminSecretKey123"     # An HTML safe string
 COLORS = ["#000000", "#A52A2A", "#7FFFD4", "#8A2BE2", "#D2691E", "#2F4F4F", "#008000"]
 color_id = 0
+APP_URL = "ohanacodedata.com"
+
+
+def pwd_encrypt(password):
+    md5 = hashlib.md5()
+    md5.update(password.encode('utf-8'))
+    return md5.hexdigest()
+
+
+def generate_token():
+    return secrets.token_urlsafe()
+
+
+def send_email(to, message, title="Data collector service"):
+    msg = Message(title,
+                  recipients=[to],
+                  html=message)
+
+    mail.send(msg)
 
 
 def init_database():
@@ -26,15 +62,19 @@ def init_database():
         # Database does not exist. Create one
         db = sqlite3.connect(db_path)
 
-        sql = "create table data (timestamp TEXT, name TEXT, value TEXT)"
+        sql = "create table data (timestamp TEXT, name TEXT, value TEXT, userid int)"
         db.execute(sql)
         db.commit()
 
-        sql = "create table ctrl (name TEXT, value TEXT, groupby TEXT, type TEXT)"
+        sql = "create table ctrl (name TEXT, value TEXT, groupby TEXT, type TEXT, userid int)"
         db.execute(sql)
         db.commit()
 
         sql = "create table units (name TEXT, unit TEXT)"
+        db.execute(sql)
+        db.commit()
+
+        sql = "create table users (id int NOT NULL AUTO_INCREMENT, email TEXT, pass TEXT, apikey TEXT, resetcode TEXT)"
         db.execute(sql)
         db.commit()
 
@@ -66,6 +106,57 @@ def before_request():
 def teardown_request(exception):
     if hasattr(g, 'db'):
         g.db.close()
+
+
+def get_user(email=None, apikey=None):
+    data = None
+
+    if email is not None:
+        sql = "SELECT * FROM users WHERE email = '{}'".format(email)
+    elif apikey is not None:
+        sql = "SELECT * FROM users WHERE apikey = '{}'".format(apikey)
+    else:
+        print("ERROR finding user with email = {}, apikey = {}.".format(email, apikey))
+        return None
+
+    try:
+        data = query_db(g.db, sql, one=True)
+    except Exception as exc:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        print("ERROR reading data on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
+
+    return data
+
+
+def set_user(email=None, apikey=None, password=None, resetcode=None):
+    user = get_user(email=email, apikey=apikey)
+
+    try:
+        if user is not None:
+            email = user["email"]
+            if password is not None:
+                sql = "UPDATE users SET password = '{}' WHERE email = '{}'".format(password, email)
+            elif resetcode is not None:
+                sql = "UPDATE users SET resetcode = '{}' WHERE email = '{}'".format(resetcode, email)
+            else:
+                print("ERROR: Nothing to do with user. No password or resetcode specified.")
+                return
+        else:
+            if email is not None:
+                # Adding a new user. Generate resetcode to enable password set.
+                resetcode = generate_token()
+                sql = "INSERT INTO users (email, resetcode) VALUES ('{}', '{}')".format(email, resetcode)
+            else:
+                print("ERROR adding user. No email specified.")
+                return
+
+        exec_db(sql)
+        user = get_user(email=email)
+    except Exception as exc:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        print("ERROR writing data to db on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
+
+    return user
 
 
 def clear_variables():
@@ -243,6 +334,10 @@ def create_plot(plot_title, data):
     return plot
 
 
+def send_activation_email(user):
+    return 'An activation email was sent to your address. Please follow the link provided to set your password.'
+
+
 @application.route('/favicon.ico')
 def favicon():
     return send_from_directory(os.path.join(application.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
@@ -255,7 +350,7 @@ def home_page():
         login_var = {"name": "Login", "url": "login", "icon": "fa-sign-in-alt"}
     else:
         login_var = {"name": "Logout", "url": "logout", "icon": "fa-sign-out-alt"}
-    return render_template("home_page.html", dldid=int(time.time()), login=login_var)
+    return render_template("home_page.html", dldid=int(time.time()), login=login_var, app_url=APP_URL)
 
 
 @application.route('/graphs')
@@ -468,6 +563,22 @@ def login():
         message = request.args.get("message")
 
     response = make_response(render_template('login.html', message=message))
+    return response
+
+
+@application.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        email = request.form.get("email", '')
+        if email != '':
+            user = set_user(email=email)
+            if user is not None:
+                status_msg = send_activation_email(user)
+                flash(status_msg)
+            response = make_response(redirect("/"))
+            return response
+
+    response = make_response(render_template('new_account.html'))
     return response
 
 

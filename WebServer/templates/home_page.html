@@ -11,7 +11,7 @@
 
 <body>
 <div class="navbar">
-	<a href="/" class="app_title">DATA ACQUISITION</a>
+	<a href="/" class="app_title">OhanaCode Data Portal</a>
 	<ul class="menu">
 		<li><a href="/">Home</a></li>
 		<li><a href="/datactrl?dummy={{dldid}}">Data & Controlls</a></li>
@@ -20,15 +20,99 @@
 	<a id='login_link' href='/{{ login["url"] }}' title='{{ login["name"] }}'><i class='fa {{ login["icon"] }}'></i></a>
 </div>
 <div class="grid">
-	<div class="col-1">
-		<h1>Place your project description on this page</h1>
+	<div class="col-1 left-aligned">
+		<h1>A simple solution for your simple embedded projects</h1>
+		<br>
+		<p>
+			Do you have a device that can sample data (temperature, humidity, moisture, voltage,...), and you need a free solution to upload the data?<br>
+		   	Do existing solution seem to much and confuse you?<br>
+		   	Try this minimalistic solution. It is free to use as long as you need it. The data will be kept for 18 months.
+			All samples older that 18 months will be deleted as part of cleanup, so make sure you download all your data every year.
+		</p>
+		<p>Please NOTE: this is <a href="https://github.com/ujagaga/data_collect_web_display">my personal non-profitable, open source</a> project and as such, I give no guarantee how long it will last.
+			I will keep it active for as long as I find it useful and as long as people are using it.
+			Hopefully at least until year 2040. If I ever intend to shut it down, you will be notified if you have any data no older than 30 days.
+		</p>
+		<br>
+		<h2>Getting started</h2>
+		<ol>
+			<li>Create a free account. You will be emailed your own API key.</li>
+			<li>Using the API key as an url parameter for a simple HTTP GET request, you can upload and check your data.</li>
+			<li>If you need to visualize the data, just head to "Graphs" page.</li>
+			<li>If you need to change your variables, checkout the "Data & Controls" page.</li>
+		</ol>
+		<br>
+		<h2>Tutorial</h2>
+		<p>
+			Let's imagine we have a device that controls a simple heater and measures the temperature.
+			To send the current temperature to this portal, it needs to make an HTTP GET request like:<br>
+			http://{{app_url}}/postdata?key=YOUR_API_KEY&N=NAME&V=VALUE&U=UNITS
+		</p>
+		<p class="code">http://{{app_url}}/postdata?key=YOUR_API_KEY&N=Temperature&V=26.4&U=°C</p>
+		<p> For name and value you can use any HTML safe text. The timestamp will be automatically updated according to current UTC time.
+			At this time, the API does not support timezones, but "Data & Controls" page will display last sample time in your browsers local timezone.<br>
+			After posting few samples, you will be able to view a graphical display on the "Graphs" page.
+		</p>
+		<p>	To retrieve the last posted data value use the "/getdata" page like:
+			http://{{app_url}}/getdata?key=YOUR_API_KEY&N=NAME
+		</p>
+		<p class="code">
+			http://{{app_url}}/getdata?key=YOUR_API_KEY&N=Temperature
+		</p>
+		<p>To set a control variable to turn the heater on/off, go to "/setvar" page. Also make sure you have the correct access key like:<br>
+			http://{{app_url}}/setvar?key=YOUR_API_KEY&N=CONTROL_VAR_NAME&V=VALUE&G=GROUP&T=TYPE
+		</p>
+		<p class="code">
+			http://{{app_url}}/setvar?key=YOUR_API_KEY&N=Activated&V=1&G=Manual%20Control&T=toggle
+		</p>
+		<p>	As you can see from above example, a control variable can have the following attributes:</p>
+		<ul>
+			<li>
+				N ... name
+			</li>
+			<li>
+				V ... value
+			</li>
+			<li>
+				G ... optional group to use to group multiple variables
+			</li>
+			<li>
+				T ... type of the variable. The only supported type is "toggle".
+            	If toggle type is set, the variable will be displayed as a toggle button. If omitted, it will be displayed as an input box value.
+			</li>
+		</ul>
+		<p>Good use of a simple data variable (non toggle) for out heater example would be a target temperature like:</p>
+		<p class="code">
+			http://{{app_url}}/postdata?key=YOUR_API_KEY&N=Target%20Temperature&V=28
+		</p>
+		<p>	You only need to set the <b>group</b> and <b>type</b> once. All further settings can be done using only <b>name</b> and <b>value</b>.
+			The previously set <b>group</b> and <b>type</b> will be automatically re-used.
+		</p>
+		<p>	To retrieve a control variable value, go to "/getvar" page like:
+    		http://{{app_url}}/getvar?key=YOUR_API_KEY&N=CONTROL_VAR_NAME
+		</p>
+		<p class="code">
+			http://{{app_url}}/getvar?key=YOUR_API_KEY&N=Activated
+		</p>
+
 	</div>
-	<div class="col-2">
-		<p>You can use a grid layout</p>
+	<div class="col-1 status-col">
+		<p>Number of users this month: {{number_of_users}}</p>
 	</div>
-	<div class="col-2">
-		<p>to help you divide your content in columns if needed</p>
-	</div>
+
 </div>
+<div class="footer-col">
+	email: <a href="mailto:ujagaga@gmail.com">ujagaga@gmail.com</a>
+</div>
+
+{% with messages = get_flashed_messages() %}
+  {% if messages %}
+    {% for message in messages %}
+	<input type="hidden" id="popup" value="{{ message }}">
+    {% endfor %}
+  {% endif %}
+{% endwith %}
 </body>
+<script type="text/javascript" src="{{url_for('static', filename='js/jquery-3.6.0.min.js')}}"></script>
+<script type="text/javascript" src="{{url_for('static', filename='js/home.js')}}"></script>
 </html>

@@ -80,3 +80,40 @@ a, a:visited, a:hover, p {
     bottom: 0;
     right: 10px;
 }
+.left-aligned{
+    text-align: left !important;
+}
+
+h1, h2{
+    margin-left: 2em;
+}
+
+.code{
+    background-color: #3a3a3a;
+    color: #e7d7c3;
+    padding: 20px;
+    margin: 20px;
+    width: calc(100% - 80px);
+    word-break: break-all;
+}
+.status-col{
+    border-top: 1px solid black;
+    margin: 30px 0 0 0;
+}
+
+.footer-col{
+    position: fixed;
+    width: 100vw;
+    height: 2em;
+    padding: 0.5em;
+    bottom: 0;
+    right: 0;
+    text-align: right;
+    background-color: black;
+    color: orange;
+}
+
+.footer-col a{
+    color: orange;
+    text-decoration: none;
+}

@@ -1,14 +1,26 @@
 #login-frm{
     padding: 20px;
-    margin: 20px;
+    margin: 0 auto;
     display: flex;
     justify-content: center;
     flex-direction: column;
+    max-width: 300px;
+    overflow: hidden;
 }
 
 input {
     font-size: 20px;
     padding: 5px;
-    width: 300px;
-    margin: auto;
+    width: calc(100% - 12px);
+    margin: 5px 0;
+    border: 1px solid black;
+    outline: none;
+}
+
+input[type=submit] {
+    width: 100%;
+}
+
+a{
+    text-decoration: none;
 }

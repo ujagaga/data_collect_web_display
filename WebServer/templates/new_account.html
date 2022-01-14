@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Login</title>
+    <title>Register</title>
     <link rel="stylesheet" href="{{url_for('static', filename='css/login.css')}}">
     <link rel="stylesheet" href="{{url_for('static', filename='css/general.css')}}">
     <link rel="stylesheet" href="{{url_for('static', filename='css/grid.css')}}">
@@ -16,14 +16,11 @@
 </div>
     <div class="grid">
         <div class="col-1">
-            <form name="loginfrm" id="login-frm" method="POST" action="/login" autocomplete="off">
-                <input type = "text" name = "username" placeholder="Username" id="username"  autofocus autocomplete="off"><br>
-                <input type = "password" name = "password" placeholder="Password" id="passw"><br>
-                <input type = "submit" class="btn login-btn" value="Submit"><br>
-                <br>
-                <a href="/register">No account? Create one.</a>
-                <br>
-                <a href="/forgot_password">Forgot your password? Reset it.</a>
+            <form name="loginfrm" id="login-frm" method="POST" action="/register" autocomplete="off">
+                <p>Please provide your email address. It will be used only to send you the activation link or to reset password.<br>
+                There will be no spam or news from this service.</p>
+                <input type = "text" name = "email" placeholder="Email" id="email"  autofocus autocomplete="off"><br>
+                <input type = "submit" class="btn login-btn" value="Register">
             </form>
         </div>
     </div>
