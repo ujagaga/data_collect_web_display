@@ -3,3 +3,4 @@
 *.db
 venv
 *app_cfg.py
+*__pycache__

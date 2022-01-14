@@ -18,23 +18,23 @@ application = Flask(__name__, static_url_path='/static', static_folder='static')
 application.config.update(
     TESTING=False,
     SECRET_KEY="RandomlyGenerated_1234asdfhg3324r89u7dsfkjdsbvc",
-    #SERVER_NAME=AppConfig.APP_URL,
-    SESSION_COOKIE_DOMAIN=AppConfig.APP_URL,
+    #SERVER_NAME=AppConfig.APP_URL.value,
+    SESSION_COOKIE_DOMAIN=AppConfig.APP_URL.value,
     SESSION_TYPE="redis",
-    MAIL_SERVER=AppConfig.MAIL_SERVER,
-    MAIL_PORT=AppConfig.MAIL_PORT,
-    MAIL_USE_TLS=AppConfig.MAIL_USE_TLS,
-    MAIL_USE_SSL=AppConfig.MAIL_USE_SSL,
-    MAIL_USERNAME=AppConfig.MAIL_USERNAME,
-    MAIL_PASSWORD=AppConfig.MAIL_PASSWORD,
-    MAIL_DEFAULT_SENDER=AppConfig.MAIL_DEFAULT_SENDER
+    MAIL_SERVER=AppConfig.MAIL_SERVER.value,
+    MAIL_PORT=AppConfig.MAIL_PORT.value,
+    MAIL_USE_TLS=AppConfig.MAIL_USE_TLS.value,
+    MAIL_USE_SSL=AppConfig.MAIL_USE_SSL.value,
+    MAIL_USERNAME=AppConfig.MAIL_USERNAME.value,
+    MAIL_PASSWORD=AppConfig.MAIL_PASSWORD.value,
+    MAIL_DEFAULT_SENDER=AppConfig.MAIL_DEFAULT_SENDER.value
 )
 mail = Mail(application)
 db_path = "database.db"
-WEB_PORT = AppConfig.WEB_PORT
+WEB_PORT = AppConfig.WEB_PORT.value
 COLORS = ["#000000", "#A52A2A", "#7FFFD4", "#8A2BE2", "#D2691E", "#2F4F4F", "#008000"]
 color_id = 0
-APP_URL = AppConfig.APP_URL
+APP_URL = AppConfig.APP_URL.value
 
 
 def pwd_encrypt(password):
@@ -60,15 +60,15 @@ def init_database():
         # Database does not exist. Create one
         db = sqlite3.connect(db_path)
 
-        sql = "create table data (timestamp TEXT, name TEXT, value TEXT, userid int)"
+        sql = "create table data (timestamp TEXT, name TEXT, value TEXT, apikey TEXT)"
         db.execute(sql)
         db.commit()
 
-        sql = "create table ctrl (name TEXT, value TEXT, groupby TEXT, type TEXT, userid int)"
+        sql = "create table ctrl (name TEXT, value TEXT, groupby TEXT, type TEXT, apikey TEXT)"
         db.execute(sql)
         db.commit()
 
-        sql = "create table units (name TEXT, unit TEXT)"
+        sql = "create table units (name TEXT, unit TEXT, apikey TEXT)"
         db.execute(sql)
         db.commit()
 
@@ -143,8 +143,6 @@ def set_user(email=None, apikey=None, password=None, resetcode=None):
                 return
         else:
             if email is not None:
-                # Adding a new user. Generate resetcode to enable password set.
-                resetcode = generate_token()
                 sql = "INSERT INTO users (email, resetcode) VALUES ('{}', '{}')".format(email, resetcode)
             else:
                 print("ERROR adding user. No email specified.")
@@ -159,20 +157,20 @@ def set_user(email=None, apikey=None, password=None, resetcode=None):
     return user
 
 
-def clear_variables():
+def clear_variables(apikey):
     try:
-        sql = "DELETE FROM ctrl"
+        sql = "DELETE FROM ctrl WHERE apikey = '{}'".format(apikey)
         exec_db(sql)
     except Exception as exc:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         print("ERROR reading data on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
 
 
-def get_variable(name):
+def get_variable(name, apikey):
     data = None
 
     try:
-        sql = "SELECT * FROM ctrl WHERE name = '{}'".format(name)
+        sql = "SELECT * FROM ctrl WHERE name = '{}' AND apikey = '{}'".format(name, apikey)
         data = query_db(g.db, sql, one=True)
     except Exception as exc:
         exc_type, exc_obj, exc_tb = sys.exc_info()
@@ -207,15 +205,15 @@ def get_all_variables():
     return data
 
 
-def set_variable(name, value, groupby="", var_type=""):
+def set_variable(name, apikey, value, groupby="", var_type=""):
     try:
-        data = get_variable(name)
+        data = get_variable(name, apikey)
 
         if data is None:
-            sql = "INSERT INTO ctrl (name, value, groupby, type) VALUES ('{}', '{}', '{}', '{}')" \
-                  "".format(name, value, groupby, var_type)
+            sql = "INSERT INTO ctrl (name, value, groupby, type, apikey) VALUES ('{}', '{}', '{}', '{}', '{}')" \
+                  "".format(name, value, groupby, var_type, apikey)
         else:
-            sql = "UPDATE ctrl SET value = '{}' WHERE name = '{}'".format(value, name)
+            sql = "UPDATE ctrl SET value = '{}' WHERE name = '{}' AND apikey = '{}'".format(value, name, apikey)
         exec_db(sql)
 
     except Exception as exc:
@@ -223,21 +221,21 @@ def set_variable(name, value, groupby="", var_type=""):
         print("ERROR writing data to db on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
 
 
-def clear_data():
+def clear_data(apikey):
     try:
-        sql = "DELETE FROM data"
+        sql = "DELETE FROM data WHERE apikey = '{}'".format(apikey)
         exec_db(sql)
     except Exception as exc:
         exc_type, exc_obj, exc_tb = sys.exc_info()
         print("ERROR reading data on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
 
 
-def save_data(name, value):
+def save_data(name, value, apikey):
     try:
         ts = time.time()
 
-        sql = "INSERT INTO data (timestamp, name, value) VALUES ('{}', '{}', '{}')" \
-              "".format(ts, name, value)
+        sql = "INSERT INTO data (timestamp, name, value, apikey) VALUES ('{}', '{}', '{}', '{}')" \
+              "".format(ts, name, value, apikey)
         exec_db(sql)
 
     except Exception as exc:
@@ -245,15 +243,15 @@ def save_data(name, value):
         print("ERROR writing data to db on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
 
 
-def get_data(name=None):
+def get_data(apikey, name=None):
     data = None
 
     try:
         if name is not None:
-            sql = "SELECT * FROM data WHERE name = '{}' ORDER BY timestamp DESC".format(name)
+            sql = "SELECT * FROM data WHERE name = '{}' AND apikey = '{}' ORDER BY timestamp DESC".format(name, apikey)
             data = query_db(g.db, sql, one=True)
         else:
-            sql = "SELECT * FROM data ORDER BY timestamp"
+            sql = "SELECT * FROM data WHERE apikey = '{}' ORDER BY timestamp".format(apikey)
             data = query_db(g.db, sql)
 
     except Exception as exc:
@@ -263,11 +261,11 @@ def get_data(name=None):
     return data
 
 
-def set_unit(name, unit):
+def set_unit(apikey, name, unit):
     try:
-        sql = "DELETE FROM units WHERE name = '{}'".format(name)
+        sql = "DELETE FROM units WHERE name = '{}' AND apikey = '{}'".format(name, apikey)
         exec_db(sql)
-        sql = "INSERT INTO units (name, unit) VALUES ('{}', '{}')".format(name, unit)
+        sql = "INSERT INTO units (name, unit, apikey) VALUES ('{}', '{}', '{}')".format(name, unit, apikey)
         exec_db(sql)
 
     except Exception as exc:
@@ -275,11 +273,11 @@ def set_unit(name, unit):
         print("ERROR writing data to db on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
 
 
-def get_units(name):
+def get_units(apikey, name):
     unit = ""
 
     try:
-        sql = "SELECT unit FROM units WHERE name = '{}'".format(name)
+        sql = "SELECT unit FROM units WHERE name = '{}' AND apikey = '{}'".format(name, apikey)
         data = query_db(g.db, sql, one=True)
 
         if data is None:
@@ -343,7 +341,10 @@ def send_password_reset_email(user):
               "".format(APP_URL, resetcode)
 
     msg = Message(title,  recipients=[user['email']], html=message)
-    mail.send(msg)
+    try:
+        mail.send(msg)
+    except Exception as e:
+        print("ERROR: email setup incorrect")
 
     return 'An activation email was sent to your address. Please follow the link provided to set your password.'
 
@@ -356,7 +357,12 @@ def favicon():
 @application.route('/')
 def home_page():
     access_key = request.cookies.get('token')
-    if ADMIN_KEY != access_key:
+    if access_key is not None:
+        user = get_user(apikey=access_key)
+    else:
+        user = None
+
+    if user is None:
         login_var = {"name": "Login", "url": "login", "icon": "fa-sign-in-alt"}
     else:
         login_var = {"name": "Logout", "url": "logout", "icon": "fa-sign-out-alt"}
@@ -371,7 +377,9 @@ def graphs():
 
     color_id = 0
     access_key = request.cookies.get('token')
-    if ADMIN_KEY != access_key:
+    user = get_user(apikey=access_key)
+
+    if user is not None:
         login_var = {"name": "Login", "url": "login", "icon": "fa-sign-in-alt"}
         authorized = False
     else:
@@ -381,7 +389,7 @@ def graphs():
     plot_list = []
 
     # get latest data
-    data_list = get_data()
+    data_list = get_data(apikey=access_key)
     if data_list is not None:
         data_dict = {}
 
@@ -415,7 +423,6 @@ def graphs():
 
     response = make_response(render_template("graphs.html", plots=plot_list, login=login_var, auth=authorized,
                                              dldid=int(time.time())))
-
     return response
 
 
@@ -425,12 +432,13 @@ def data_and_controls():
 
     color_id = 0
     access_key = request.cookies.get('token')
+    user = get_user(apikey=access_key)
 
-    if ADMIN_KEY != access_key:
+    if user is None:
         return redirect("/login")
     else:
         login_var = {"name": "Logout", "url": "logout", "icon": "fa-sign-out-alt"}
-        data_list = get_data()
+        data_list = get_data(apikey=access_key)
 
         if len(data_list) > 0:
             last_timestamp = int(float(data_list[-1]['timestamp']) * 1000)
@@ -446,7 +454,7 @@ def data_and_controls():
                 data_dict[name] = data["value"]
 
             for name in data_dict.keys():
-                unit = get_units(name)
+                unit = get_units(apikey=access_key, name=name)
 
                 new_list.append({"name": name, "val": data_dict[name], "unit": unit})
         vars = get_all_variables()
@@ -460,7 +468,9 @@ def data_and_controls():
 
 @application.route('/download')
 def download_csv():
-    data_list = get_data()
+    access_key = request.cookies.get('token')
+
+    data_list = get_data(apikey=access_key)
     if data_list is not None:
         data_dict = {}
         for data in data_list:
@@ -487,9 +497,10 @@ def download_csv():
 
 @application.route('/postdata', methods=['GET'])
 def post_data():
-    access_key = request.args.get('key', ' ')
+    access_key = request.cookies.get('token')
+    user = get_user(apikey=access_key)
 
-    if ADMIN_KEY != access_key:
+    if user is None:
         return "Unauthorized"
 
     name = request.args.get('N', None)
@@ -500,16 +511,17 @@ def post_data():
         save_data(name, value)
 
         if unit is not None:
-            set_unit(name, unit)
+            set_unit(apikey=access_key, name=name, unit=unit)
 
     return 'ok'
 
 
 @application.route('/setvar', methods=['GET'])
 def set_var():
-    access_key = request.args.get('key', ' ')
+    access_key = request.cookies.get('token')
+    user = get_user(apikey=access_key)
 
-    if ADMIN_KEY != access_key:
+    if user is None:
         return redirect("/login")
 
     name = request.args.get('N', None)
@@ -518,22 +530,23 @@ def set_var():
     var_type = request.args.get('T', "")
 
     if name is not None and value is not None:
-        set_variable(name, value, groupby, var_type)
+        set_variable(apikey=access_key, name=name, value=value, groupby=groupby, var_type=var_type)
 
     return 'ok'
 
 
 @application.route('/getvar', methods=['GET'])
 def get_var():
-    access_key = request.args.get('key', ' ')
+    access_key = request.cookies.get('token')
+    user = get_user(apikey=access_key)
 
-    if ADMIN_KEY != access_key:
+    if user is None:
         return redirect("/login")
 
     name = request.args.get('N', None)
 
     if name is not None:
-        var = get_variable(name)
+        var = get_variable(name=name, apikey=access_key)
         if var is not None:
             return var
 
@@ -543,9 +556,10 @@ def get_var():
 @application.route('/cleardata', methods=['GET'])
 def cleardata():
     access_key = request.cookies.get('token')
+    user = get_user(apikey=access_key)
 
-    if ADMIN_KEY == access_key:
-        clear_data()
+    if user is not None:
+        clear_data(access_key)
 
     return redirect("/")
 
@@ -553,9 +567,10 @@ def cleardata():
 @application.route('/clearvars', methods=['GET'])
 def clearvars():
     access_key = request.cookies.get('token')
+    user = get_user(apikey=access_key)
 
-    if ADMIN_KEY == access_key:
-        clear_variables()
+    if user is not None:
+        clear_variables(access_key)
 
     return redirect("/")
 
@@ -565,9 +580,12 @@ def login():
     if request.method == 'POST':
         username = request.form.get("username", '')
         password = request.form.get("password", '')
-        if password == ADMIN_PASS and username == ADMIN_USERNAME:
+
+        user = get_user(username)
+
+        if user is not None and password == user["password"]:
             response = make_response(redirect("/"))
-            response.set_cookie('token', ADMIN_KEY, max_age=1200)
+            response.set_cookie('token', user["apikey"], max_age=1200)
             return response
         else:
             message = "Login or password incorrect"
@@ -583,7 +601,11 @@ def register():
     if request.method == 'POST':
         email = request.form.get("email", '')
         if email != '':
-            user = set_user(email=email)
+            # Adding a new user. Generate resetcode to enable password set.
+            resetcode = generate_token()
+
+            user = set_user(email=email, resetcode=resetcode)
+            status_msg = None
             if user is not None:
                 status_msg = send_password_reset_email(user)
             return redirect(url_for('home_page', message=status_msg))

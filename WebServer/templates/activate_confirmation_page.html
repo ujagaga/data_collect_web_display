@@ -1,0 +1,45 @@
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Data Acquisition Web Interface</title>
+	<link rel="stylesheet" href="{{url_for('static', filename='css/general.css')}}">
+	<link rel="stylesheet" href="{{url_for('static', filename='css/grid.css')}}">
+	<link rel="stylesheet" href="{{url_for('static', filename='webfonts/fontawsome_all.css')}}">
+</head>
+
+<body>
+<div class="navbar">
+	<a href="/" class="app_title">OhanaCode Data Portal</a>
+	<ul class="menu">
+		<li><a href="/">Home</a></li>
+		<li><a href="/datactrl?dummy={{dldid}}">Data & Controlls</a></li>
+		<li><a href="/graphs?dummy={{dldid}}">Graphs</a></li>
+	</ul>
+	<a id='login_link' href='/{{ login["url"] }}' title='{{ login["name"] }}'><i class='fa {{ login["icon"] }}'></i></a>
+</div>
+<div class="grid">
+	<div class="col-1 left-aligned">
+		<h1>Your Account Is Active</h1>
+		<br>
+		<p>
+			Please take a note of your API key: "{{apikey}}". You will need it for each authorized request from your devices.
+		</p>
+
+	</div>
+	<div class="col-1 status-col">
+		<p>Number of users this month: {{number_of_users}}</p>
+	</div>
+
+</div>
+<div class="footer-col">
+	email: <a href="mailto:ujagaga@gmail.com">ujagaga@gmail.com</a>
+</div>
+
+{% if message %}
+<input type="hidden" id="popup" value="{{ message }}">
+{% endif %}
+
+</body>
+</html>
