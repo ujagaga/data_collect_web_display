@@ -34,25 +34,10 @@
             </form>
         </div>
 	</div>
-
-	<div class="col-1 left-aligned">
-		<p>
-			Please take a note of your API key: "{{apikey}}". You will need it to authorize each HTTP request from your devices.
-		</p>
-
-	</div>
-	<div class="col-1 status-col">
-		<p>Number of users this month: {{number_of_users}}</p>
-	</div>
-
 </div>
 <div class="footer-col">
 	email: <a href="mailto:ujagaga@gmail.com">ujagaga@gmail.com</a>
 </div>
-
-{% if message %}
-<input type="hidden" id="popup" value="{{ message }}">
-{% endif %}
 
 </body>
 <script type="text/javascript" src="{{url_for('static', filename='js/jquery-3.6.0.min.js')}}"></script>

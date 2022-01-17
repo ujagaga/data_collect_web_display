@@ -357,10 +357,29 @@ def send_password_reset_email(user):
     try:
         mail.send(msg)
     except Exception as e:
-        print("ERROR: email setup incorrect: {}, APP config: {}".format(e, application.config))
+        print("ERROR: email setup incorrect: {}, APP config: {}".format(e, application.config), flush=True)
         return 'An error occurred while trying to send the activation email. Please contact the administrator'
 
     return 'An activation email was sent to your address. Please follow the link provided to set your password.'
+
+
+def email_api_key(email, apikey):
+
+    title = "{} API key".format(APP_URL)
+    message = "<p>You successfully registered a user account</p>" \
+              "<p>Your API key is: {}</p>" \
+              "<p>You will need it for authorizing all HTTP requests from your devices.</p>" \
+              "<p>For more information on how to send data from embedded devices, " \
+              "please visit <a href=https://{}</a></p>".format(apikey, APP_URL)
+
+    msg = Message(title, recipients=[email], html=message)
+    try:
+        mail.send(msg)
+    except Exception as e:
+        print("ERROR: email setup incorrect: {}, APP config: {}".format(e, application.config), flush=True)
+        return 'An error occurred while trying to send an email with details. Please contact the administrator'
+
+    return 'An email with your API key was sent to your address.'
 
 
 @application.route('/favicon.ico')
@@ -642,7 +661,9 @@ def resetpass():
                 apikey = generate_token()
                 set_user(email, apikey)
 
-            return redirect(url_for('activate', apikey=apikey))
+                email_api_key(email, apikey)
+
+            return redirect(url_for('activate'))
 
     status_msg = "An error occurred while setting your password. Are you sure you followed the right link?"
     return redirect(url_for('home_page', message=status_msg))
