@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-from flask import Flask, request, render_template, Markup, send_from_directory, g, redirect, make_response, flash, url_for
+from flask import Flask, request, render_template, Markup, send_from_directory, g, redirect, make_response, url_for
 import sys
 import os
 import sqlite3
