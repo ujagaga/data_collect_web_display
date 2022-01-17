@@ -3,7 +3,6 @@
 from flask import Flask, request, render_template, Markup, send_from_directory, g, redirect, make_response, url_for
 import sys
 import os
-import sqlite3
 import plotly
 from plotly.graph_objs import Scatter, Layout
 from datetime import datetime
@@ -13,6 +12,12 @@ import secrets
 from flask_mail import Mail, Message
 from app_cfg import AppConfig
 
+if AppConfig.DB_TYPE.value == "mysql":
+    import mysql.connector
+else:
+    import sqlite3
+
+db_path = AppConfig.DB_NAME.value
 
 application = Flask(__name__, static_url_path='/static', static_folder='static')
 application.config.update(
@@ -30,7 +35,6 @@ application.config.update(
     MAIL_DEFAULT_SENDER=AppConfig.MAIL_DEFAULT_SENDER.value
 )
 mail = Mail(application)
-db_path = "database.db"
 WEB_PORT = AppConfig.WEB_PORT.value
 COLORS = ["#000000", "#A52A2A", "#7FFFD4", "#8A2BE2", "#D2691E", "#2F4F4F", "#008000"]
 color_id = 0
@@ -47,40 +51,13 @@ def generate_token():
     return secrets.token_urlsafe()
 
 
-def send_email(to, message, title="Data collector service"):
-    msg = Message(title,
-                  recipients=[to],
-                  html=message)
-
-    mail.send(msg)
-
-
-def init_database():
-    if not os.path.isfile(db_path):
-        # Database does not exist. Create one
-        db = sqlite3.connect(db_path)
-
-        sql = "create table data (timestamp TEXT, name TEXT, value TEXT, apikey TEXT)"
-        db.execute(sql)
-        db.commit()
-
-        sql = "create table ctrl (name TEXT, value TEXT, groupby TEXT, type TEXT, apikey TEXT)"
-        db.execute(sql)
-        db.commit()
-
-        sql = "create table units (name TEXT, unit TEXT, apikey TEXT)"
-        db.execute(sql)
-        db.commit()
-
-        sql = "create table users (email  TEXT, pass TEXT, apikey TEXT, resetcode TEXT)"
-        db.execute(sql)
-        db.commit()
-
-        db.close()
-
-
 def query_db(db, query, args=(), one=False):
-    cur = db.execute(query, args)
+    if AppConfig.DB_TYPE.value == "mysql":
+        db.execute(query, args)
+        cur = db
+    else:
+        cur = db.execute(query, args)
+
     rv = [dict((cur.description[idx][0], value)
                for idx, value in enumerate(row)) for row in cur.fetchall()]
     return (rv[0] if rv else None) if one else rv
@@ -89,21 +66,57 @@ def query_db(db, query, args=(), one=False):
 def exec_db(query):
     g.db.execute(query)
     if not query.startswith('SELECT'):
-        g.db.commit()
+        if AppConfig.DB_TYPE.value == "mysql":
+            g.connection.commit()
+        else:
+            g.db.commit()
 
 
 @application.before_request
 def before_request():
-    if not os.path.isfile(db_path):
-        init_database()
+    if AppConfig.DB_TYPE.value == "mysql":
+        g.connection = mysql.connector.connect(
+            host="localhost",
+            user=AppConfig.DB_USER.value,
+            passwd=AppConfig.DB_PASS.value,
+            database=AppConfig.DB_NAME.value
+        )
+        g.db = g.connection.cursor(buffered=True)
+    else:
+        if not os.path.isfile(db_path):
+            # Database does not exist. Create one
+            db = sqlite3.connect(db_path)
 
-    g.db = sqlite3.connect(db_path)
+            sql = "create table data (timestamp TEXT, name TEXT, value TEXT, apikey TEXT)"
+            db.execute(sql)
+            db.commit()
+
+            sql = "create table ctrl (name TEXT, value TEXT, groupby TEXT, type TEXT, apikey TEXT)"
+            db.execute(sql)
+            db.commit()
+
+            sql = "create table units (name TEXT, unit TEXT, apikey TEXT)"
+            db.execute(sql)
+            db.commit()
+
+            sql = "create table users (email  TEXT, pass TEXT, apikey TEXT, resetcode TEXT)"
+            db.execute(sql)
+            db.commit()
+
+            db.close()
+
+        else:
+            g.db = sqlite3.connect(db_path)
 
 
 @application.teardown_request
 def teardown_request(exception):
-    if hasattr(g, 'db'):
+    if AppConfig.DB_TYPE.value == "mysql":
         g.db.close()
+        g.connection.close()
+    else:
+        if hasattr(g, 'db'):
+            g.db.close()
 
 
 def get_user(email=None, apikey=None):
