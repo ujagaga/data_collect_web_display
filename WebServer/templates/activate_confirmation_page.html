@@ -7,6 +7,7 @@
 	<link rel="stylesheet" href="{{url_for('static', filename='css/general.css')}}">
 	<link rel="stylesheet" href="{{url_for('static', filename='css/grid.css')}}">
 	<link rel="stylesheet" href="{{url_for('static', filename='webfonts/fontawsome_all.css')}}">
+	<link rel="stylesheet" href="{{url_for('static', filename='css/login.css')}}">
 </head>
 
 <body>
@@ -20,11 +21,23 @@
 	<a id='login_link' href='/{{ login["url"] }}' title='{{ login["name"] }}'><i class='fa {{ login["icon"] }}'></i></a>
 </div>
 <div class="grid">
-	<div class="col-1 left-aligned">
-		<h1>Your Account Is Active</h1>
+	<div class="col-1">
+		<h1>Please select a new password</h1>
 		<br>
+		<div class="col-1">
+            <form name="loginfrm" id="login-frm" method="POST" action="/activate" autocomplete="off">
+				<input type="hidden" name="apikey" value="{{ apikey }}">
+                <input type = "password" name = "password1" placeholder="Password" id="password1"  autofocus autocomplete="off"><br>
+                <input type = "password" name = "password2" placeholder="Repeat password" id="password2"><br>
+                <input type = "submit" class="btn login-btn" value="Submit">
+				<p id="status_msg"></p>
+            </form>
+        </div>
+	</div>
+
+	<div class="col-1 left-aligned">
 		<p>
-			Please take a note of your API key: "{{apikey}}". You will need it for each authorized request from your devices.
+			Please take a note of your API key: "{{apikey}}". You will need it to authorize each HTTP request from your devices.
 		</p>
 
 	</div>
@@ -42,4 +55,6 @@
 {% endif %}
 
 </body>
+<script type="text/javascript" src="{{url_for('static', filename='js/jquery-3.6.0.min.js')}}"></script>
+<script type="text/javascript" src="{{url_for('static', filename='js/activate.js')}}"></script>
 </html>

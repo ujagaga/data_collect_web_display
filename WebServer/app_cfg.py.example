@@ -5,17 +5,17 @@ Rename this file as "app_cfg.py" and adjust your configuration
 from enum import Enum
 
 
-class AppConfig(Enum):
-    APP_URL = "your.web.domain"
-    MAIL_SERVER = "your.mail.server",
-    MAIL_PORT = 26,
-    MAIL_USE_TLS = False,
-    MAIL_USE_SSL = False,
-    MAIL_USERNAME = "your.default.username",
-    MAIL_PASSWORD = "your.email.password",
-    MAIL_DEFAULT_SENDER = "email_of@default.sender"
+class AppConfig:
+    APP_URL = 'your.web.domain'
+    MAIL_SERVER = 'your.mail.server'
+    MAIL_PORT = 26
+    MAIL_USE_TLS = False
+    MAIL_USE_SSL = False
+    MAIL_USERNAME = 'your.default.username'
+    MAIL_PASSWORD = 'your.email.password'
+    MAIL_DEFAULT_SENDER = 'email_of@default.sender'
     WEB_PORT = 8000
-    DB_TYPE = "sqlite"                  # Supported "mysql" and "sqlite"
-    DB_USER = "username_if_mysql"
-    DB_PASS = "password_if_mysql"
-    DB_NAME = "path_if_sqlite_or_name_if_mysql"
+    DB_TYPE = 'sqlite'                  # Supported "mysql" and "sqlite"
+    DB_USER = 'username_if_mysql'
+    DB_PASS = 'password_if_mysql'
+    DB_NAME = 'path_if_sqlite_or_name_if_mysql'

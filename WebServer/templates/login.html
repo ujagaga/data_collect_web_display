@@ -17,6 +17,7 @@
     <div class="grid">
         <div class="col-1">
             <form name="loginfrm" id="login-frm" method="POST" action="/login" autocomplete="off">
+                <p class="err-msg">{{message}}</p>
                 <input type = "text" name = "username" placeholder="Username" id="username"  autofocus autocomplete="off"><br>
                 <input type = "password" name = "password" placeholder="Password" id="passw"><br>
                 <input type = "submit" class="btn login-btn" value="Submit"><br>
@@ -25,6 +26,7 @@
                 <br>
                 <a href="/forgot_password">Forgot your password? Reset it.</a>
             </form>
+
         </div>
     </div>
 </body>

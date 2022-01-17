@@ -32,38 +32,38 @@
 				<h2>{{ key }}</h2>
 				{% for variable in vars[key] %}
 
-				{% if variable["type"].startswith("t") %}
-				<div class="toggle-var">
-					<p>{{ variable["name"] }}</p>
-					<label>
-						<input type="checkbox" {% if variable["value"] == '0' %}{% else %}checked{% endif %}
-						id="var_{{ variable['name'].replace(" ", "%20%") }}"
-						onclick="toggleVar('{{ variable['name'] }}', this);">
-						<span class="slider"></span>
-					</label>
-				</div>
-				{% if variable["type"].startswith("s") %}
-				<div class="semaphore-var">
-					<p>{{ variable["name"] }}</p>
+					{% if variable["type"].startswith("t") %}
+					<div class="toggle-var">
+						<p>{{ variable["name"] }}</p>
+						<label>
+							<input type="checkbox" {% if variable["value"] == '0' %}{% else %}checked{% endif %}
+							id="var_{{ variable['name'].replace(" ", "%20%") }}"
+							onclick="toggleVar('{{ variable['name'] }}', this);">
+							<span class="slider"></span>
+						</label>
+					</div>
+					{% elif variable["type"].startswith("s") %}
+					<div class="semaphore-var">
+						<p>{{ variable["name"] }}</p>
 
-					{% if variable["value"] == '0' %}
-					<div class="semaphore-off"></div>
+						{% if variable["value"] == '0' %}
+						<div class="semaphore-off"></div>
+						{% else %}
+						<div class="semaphore-on"></div>
+						{% endif %}
+					</div>
 					{% else %}
-					<div class="semaphore-on"></div>
+					<div class="gen-var">
+						<p>{{ variable["name"] }}</p>
+						<input class="genvar" type="text" name='var_{{ variable["name"] }}'
+							   id="var_{{ variable['name'].replace(' ', '%20%') }}"
+							   value='{{variable["value"]}}' onkeydown="process_keypress(this);">
+						<button class="apply-btn"
+								onclick="process_apply_button(this);"
+								id="btn_{{ variable['name'].replace(' ', '%20%') }}"
+								>Apply</button>
+					</div>
 					{% endif %}
-				</div>
-				{% else %}
-				<div class="gen-var">
-					<p>{{ variable["name"] }}</p>
-					<input class="genvar" type="text" name='var_{{ variable["name"] }}'
-						   id="var_{{ variable['name'].replace(' ', '%20%') }}"
-						   value='{{variable["value"]}}' onkeydown="process_keypress(this);">
-					<button class="apply-btn"
-							onclick="process_apply_button(this);"
-							id="btn_{{ variable['name'].replace(' ', '%20%') }}"
-							>Apply</button>
-				</div>
-				{% endif %}
 
 				{% endfor %}
 			</div>

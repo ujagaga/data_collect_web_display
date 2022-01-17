@@ -12,33 +12,33 @@ import secrets
 from flask_mail import Mail, Message
 from app_cfg import AppConfig
 
-if AppConfig.DB_TYPE.value == "mysql":
+if AppConfig.DB_TYPE == "mysql":
     import mysql.connector
 else:
     import sqlite3
 
-db_path = AppConfig.DB_NAME.value
+db_path = AppConfig.DB_NAME
 
 application = Flask(__name__, static_url_path='/static', static_folder='static')
 application.config.update(
     TESTING=False,
     SECRET_KEY="RandomlyGenerated_1234asdfhg3324r89u7dsfkjdsbvc",
-    #SERVER_NAME=AppConfig.APP_URL.value,
-    SESSION_COOKIE_DOMAIN=AppConfig.APP_URL.value,
+    SERVER_NAME=AppConfig.APP_URL,
+    SESSION_COOKIE_DOMAIN=AppConfig.APP_URL,
     SESSION_TYPE="redis",
-    MAIL_SERVER=AppConfig.MAIL_SERVER.value,
-    MAIL_PORT=AppConfig.MAIL_PORT.value,
-    MAIL_USE_TLS=AppConfig.MAIL_USE_TLS.value,
-    MAIL_USE_SSL=AppConfig.MAIL_USE_SSL.value,
-    MAIL_USERNAME=AppConfig.MAIL_USERNAME.value,
-    MAIL_PASSWORD=AppConfig.MAIL_PASSWORD.value,
-    MAIL_DEFAULT_SENDER=AppConfig.MAIL_DEFAULT_SENDER.value
+    MAIL_SERVER=AppConfig.MAIL_SERVER,
+    MAIL_PORT=AppConfig.MAIL_PORT,
+    MAIL_USE_TLS=AppConfig.MAIL_USE_TLS,
+    MAIL_USE_SSL=AppConfig.MAIL_USE_SSL,
+    MAIL_USERNAME=AppConfig.MAIL_USERNAME,
+    MAIL_PASSWORD=AppConfig.MAIL_PASSWORD,
+    MAIL_DEFAULT_SENDER=AppConfig.MAIL_DEFAULT_SENDER
 )
 mail = Mail(application)
-WEB_PORT = AppConfig.WEB_PORT.value
+WEB_PORT = AppConfig.WEB_PORT
 COLORS = ["#000000", "#A52A2A", "#7FFFD4", "#8A2BE2", "#D2691E", "#2F4F4F", "#008000"]
 color_id = 0
-APP_URL = AppConfig.APP_URL.value
+APP_URL = AppConfig.APP_URL
 
 
 def pwd_encrypt(password):
@@ -52,9 +52,9 @@ def generate_token():
 
 
 def query_db(db, query, args=(), one=False):
-    if AppConfig.DB_TYPE.value == "mysql":
-        db.execute(query, args)
+    if AppConfig.DB_TYPE == "mysql":
         cur = db
+        cur.execute(query)
     else:
         cur = db.execute(query, args)
 
@@ -66,7 +66,7 @@ def query_db(db, query, args=(), one=False):
 def exec_db(query):
     g.db.execute(query)
     if not query.startswith('SELECT'):
-        if AppConfig.DB_TYPE.value == "mysql":
+        if AppConfig.DB_TYPE == "mysql":
             g.connection.commit()
         else:
             g.db.commit()
@@ -74,12 +74,12 @@ def exec_db(query):
 
 @application.before_request
 def before_request():
-    if AppConfig.DB_TYPE.value == "mysql":
+    if AppConfig.DB_TYPE == "mysql":
         g.connection = mysql.connector.connect(
             host="localhost",
-            user=AppConfig.DB_USER.value,
-            passwd=AppConfig.DB_PASS.value,
-            database=AppConfig.DB_NAME.value
+            user=AppConfig.DB_USER,
+            passwd=AppConfig.DB_PASS,
+            database=AppConfig.DB_NAME
         )
         g.db = g.connection.cursor(buffered=True)
     else:
@@ -111,7 +111,7 @@ def before_request():
 
 @application.teardown_request
 def teardown_request(exception):
-    if AppConfig.DB_TYPE.value == "mysql":
+    if AppConfig.DB_TYPE == "mysql":
         g.db.close()
         g.connection.close()
     else:
@@ -127,14 +127,14 @@ def get_user(email=None, apikey=None):
     elif apikey is not None:
         sql = "SELECT * FROM users WHERE apikey = '{}'".format(apikey)
     else:
-        print("ERROR finding user with email = {}, apikey = {}.".format(email, apikey))
+        print("ERROR finding user with email = {}, apikey = {}.".format(email, apikey), flush=True)
         return None
 
     try:
         data = query_db(g.db, sql, one=True)
     except Exception as exc:
         exc_type, exc_obj, exc_tb = sys.exc_info()
-        print("ERROR reading data on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
+        print("ERROR reading data on line {}!\n\t{}".format(exc_tb.tb_lineno, exc), flush=True)
 
     return data
 
@@ -146,26 +146,26 @@ def set_user(email=None, apikey=None, password=None, resetcode=None):
         if user is not None:
             email = user["email"]
             if password is not None:
-                sql = "UPDATE users SET password = '{}' WHERE email = '{}'".format(password, email)
+                sql = "UPDATE users SET pass = '{}' WHERE email = '{}'".format(password, email)
             elif resetcode is not None:
                 sql = "UPDATE users SET resetcode = '{}' WHERE email = '{}'".format(resetcode, email)
             elif email is not None and apikey is not None:
                 sql = "UPDATE users SET apikey = '{}' WHERE email = '{}'".format(apikey, email)
             else:
-                print("ERROR: Nothing to do with user. No password or resetcode specified.")
+                print("ERROR: Nothing to do with user. No password or resetcode specified.", flush=True)
                 return
         else:
             if email is not None:
                 sql = "INSERT INTO users (email, resetcode) VALUES ('{}', '{}')".format(email, resetcode)
             else:
-                print("ERROR adding user. No email specified.")
+                print("ERROR adding user. No email specified.", flush=True)
                 return
 
         exec_db(sql)
         user = get_user(email=email)
     except Exception as exc:
         exc_type, exc_obj, exc_tb = sys.exc_info()
-        print("ERROR writing data to db on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
+        print("ERROR writing data to db on line {}!\n\t{}".format(exc_tb.tb_lineno, exc), flush=True)
 
     return user
 
@@ -350,14 +350,15 @@ def send_password_reset_email(user):
     title = "{} Activation".format(APP_URL)
 
     message = "<p>You requested a new account or password reset.</p>" \
-              "<p>Please click <a href=https://{}/resetpass?resetcode={}&email=user['email']>here</a> to set new password.</p>" \
-              "".format(APP_URL, resetcode)
+              "<p>Please click <a href=https://{}/resetpass?resetcode={}&email={}>here</a> to set new password.</p>" \
+              "".format(APP_URL, resetcode, user['email'])
 
     msg = Message(title,  recipients=[user['email']], html=message)
     try:
         mail.send(msg)
     except Exception as e:
-        print("ERROR: email setup incorrect")
+        print("ERROR: email setup incorrect: {}, APP config: {}".format(e, application.config))
+        return 'An error occurred while trying to send the activation email. Please contact the administrator'
 
     return 'An activation email was sent to your address. Please follow the link provided to set your password.'
 
@@ -474,7 +475,7 @@ def data_and_controls():
 
         response = make_response(render_template("datactrl.html", dldid=int(time.time()), vars=vars,
                                                  value_list=new_list, login=login_var, ts=last_timestamp))
-        response.set_cookie('token', ADMIN_KEY, max_age=1200)
+        response.set_cookie('token', access_key, max_age=1200)
 
         return response
 
@@ -590,18 +591,19 @@ def clearvars():
 
 @application.route('/login', methods=['GET', 'POST'])
 def login():
+    message = ""
     if request.method == 'POST':
         username = request.form.get("username", '')
         password = request.form.get("password", '')
 
         user = get_user(username)
 
-        if user is not None and password == user["password"]:
+        if user is not None and password == user["pass"]:
             response = make_response(redirect("/"))
             response.set_cookie('token', user["apikey"], max_age=1200)
             return response
         else:
-            message = "Login or password incorrect"
+            message = "Email or password incorrect"
     else:
         message = request.args.get("message")
 
@@ -636,12 +638,11 @@ def resetpass():
         user = get_user(email=email)
         if user is not None and user["resetcode"] == resetcode:
             apikey = user["apikey"]
-            if len(apikey) < 16:
+            if apikey is None or len(apikey) < 16:
                 apikey = generate_token()
-                return redirect(url_for('activate', apikey=apikey))
-            else:
-                status_msg = "Your password was successfully reset. You may now login using the new password."
-                return redirect(url_for('home_page', message=status_msg))
+                set_user(email, apikey)
+
+            return redirect(url_for('activate', apikey=apikey))
 
     status_msg = "An error occurred while setting your password. Are you sure you followed the right link?"
     return redirect(url_for('home_page', message=status_msg))
@@ -654,11 +655,27 @@ def logout():
     return response
 
 
-@application.route('/activate', methods=['GET'])
+@application.route('/activate', methods=['GET', 'POST'])
 def activate():
-    apikey = request.args.get('apikey')
-    response = make_response(render_template('activate_confirmation_page.html', apikey=apikey))
-    return response
+    if request.method == 'POST':
+        password = request.form.get("password1", '')
+        apikey = request.form.get("apikey", '')
+
+        user = get_user(apikey=apikey)
+        if user is not None and len(password) > 5:
+            set_user(apikey=apikey, password=password)
+            status_msg = "Password set successfully. You may now login with the new password."
+        else:
+            status_msg = "An error occurred while setting your password. {} | {} | {}".format(password, user, apikey)
+
+        return redirect(url_for('home_page', message=status_msg))
+    else:
+        login_var = {"name": "Login", "url": "login", "icon": "fa-sign-in-alt"}
+        apikey = request.args.get('apikey')
+        response = make_response(render_template('activate_confirmation_page.html',
+                                                 apikey=apikey,
+                                                 login=login_var))
+        return response
 
 
 if __name__ == '__main__':
