@@ -244,7 +244,7 @@ def clear_data(apikey):
         print("ERROR reading data on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
 
 
-def save_data(name, value, apikey):
+def save_data(apikey, name, value):
     try:
         ts = time.time()
 
@@ -364,25 +364,6 @@ def send_password_reset_email(user):
     return 'An activation email was sent to your address. Please follow the link provided to set your password.'
 
 
-def email_api_key(email, apikey):
-
-    title = "{} API key".format(APP_URL)
-    message = "<p>You successfully registered a user account</p>" \
-              "<p>Your API key is: {}</p>" \
-              "<p>You will need it for authorizing all HTTP requests from your devices.</p>" \
-              "<p>For more information on how to send data from embedded devices, " \
-              "please visit <a href=https://{}</a></p>".format(apikey, APP_URL)
-
-    msg = Message(title, recipients=[email], html=message)
-    try:
-        mail.send(msg)
-    except Exception as e:
-        print("ERROR: email setup incorrect: {}, APP config: {}".format(e, application.config), flush=True)
-        return 'An error occurred while trying to send an email with details. Please contact the administrator'
-
-    return 'An email with your API key was sent to your address.'
-
-
 @application.route('/favicon.ico')
 def favicon():
     return send_from_directory(os.path.join(application.root_path, 'static'), 'favicon.ico', mimetype='image/vnd.microsoft.icon')
@@ -391,21 +372,26 @@ def favicon():
 @application.route('/')
 def home_page():
     access_key = request.cookies.get('token')
+    user = None
+
     if access_key is not None:
         user = get_user(apikey=access_key)
-    else:
-        user = None
 
     if user is None:
         login_var = {"name": "Login", "url": "login", "icon": "fa-sign-in-alt"}
+        apikey_msg = ""
+        access_key = "YOUR_API_KEY"
     else:
         login_var = {"name": "Logout", "url": "logout", "icon": "fa-sign-out-alt"}
+        apikey_msg = "API key: {}".format(user["apikey"])
 
     message = request.args.get('message')
     return render_template("home_page.html", dldid=int(time.time()),
                            login=login_var,
                            app_url=APP_URL,
                            message=message,
+                           apikey_msg=apikey_msg,
+                           apikey=access_key,
                            admin_email=AppConfig.MAIL_DEFAULT_SENDER)
 
 
@@ -417,12 +403,10 @@ def graphs():
     access_key = request.cookies.get('token')
     user = get_user(apikey=access_key)
 
-    if user is not None:
-        login_var = {"name": "Login", "url": "login", "icon": "fa-sign-in-alt"}
-        authorized = False
+    if user is None:
+        return redirect(url_for('login'))
     else:
         login_var = {"name": "Logout", "url": "logout", "icon": "fa-sign-out-alt"}
-        authorized = True
 
     plot_list = []
 
@@ -459,8 +443,7 @@ def graphs():
                     plot_data = {"date": year + "." + month, "plot": plot_html, "title": plot_title}
                     plot_list.append(plot_data)
 
-    response = make_response(render_template("graphs.html", plots=plot_list, login=login_var, auth=authorized,
-                                             dldid=int(time.time())))
+    response = make_response(render_template("graphs.html", plots=plot_list, login=login_var, dldid=int(time.time())))
     return response
 
 
@@ -499,7 +482,7 @@ def data_and_controls():
 
         response = make_response(render_template("datactrl.html", dldid=int(time.time()), vars=vars,
                                                  value_list=new_list, login=login_var, ts=last_timestamp))
-        response.set_cookie('token', access_key, max_age=1200)
+        response.set_cookie('token', access_key, max_age=86400)
 
         return response
 
@@ -534,9 +517,9 @@ def download_csv():
 
 
 @application.route('/postdata', methods=['GET'])
-def post_data():
-    access_key = request.cookies.get('token')
-    user = get_user(apikey=access_key)
+def postdata():
+    apikey = request.args.get('key')
+    user = get_user(apikey=apikey)
 
     if user is None:
         return "Unauthorized"
@@ -546,21 +529,39 @@ def post_data():
     unit = request.args.get('U', None)
 
     if name is not None and value is not None:
-        save_data(name, value)
+        save_data(apikey=apikey, name=name, value=value)
 
         if unit is not None:
-            set_unit(apikey=access_key, name=name, unit=unit)
+            set_unit(apikey=apikey, name=name, unit=unit)
 
     return 'ok'
 
 
-@application.route('/setvar', methods=['GET'])
-def set_var():
-    access_key = request.cookies.get('token')
-    user = get_user(apikey=access_key)
+@application.route('/getdata', methods=['GET'])
+def getdata():
+    apikey = request.args.get('key')
+    user = get_user(apikey=apikey)
 
     if user is None:
-        return redirect("/login")
+        return "Unauthorized"
+
+    name = request.args.get('N', None)
+
+    if name is not None:
+        data = get_data(apikey=apikey, name=name)
+        if data is not None:
+            return data.get("value", '0')
+
+    return 'none'
+
+
+@application.route('/setvar', methods=['GET'])
+def setvar():
+    apikey = request.args.get('key')
+    user = get_user(apikey=apikey)
+
+    if user is None:
+        return "Unauthorized"
 
     name = request.args.get('N', None)
     value = request.args.get('V', None)
@@ -568,23 +569,23 @@ def set_var():
     var_type = request.args.get('T', "")
 
     if name is not None and value is not None:
-        set_variable(apikey=access_key, name=name, value=value, groupby=groupby, var_type=var_type)
+        set_variable(apikey=apikey, name=name, value=value, groupby=groupby, var_type=var_type)
 
     return 'ok'
 
 
 @application.route('/getvar', methods=['GET'])
-def get_var():
-    access_key = request.args.get('token')
-    user = get_user(apikey=access_key)
+def getvar():
+    apikey = request.args.get('key')
+    user = get_user(apikey=apikey)
 
     if user is None:
-        return redirect("/login")
+        return "Unauthorized"
 
     name = request.args.get('N', None)
 
     if name is not None:
-        var = get_variable(name=name, apikey=access_key)
+        var = get_variable(name=name, apikey=apikey)
         if var is not None:
             return var
 
@@ -594,7 +595,6 @@ def get_var():
 @application.route('/json', methods=['GET'])
 def get_json():
     access_key = request.args.get('apikey')
-    user = get_user(apikey=access_key)
 
     vars = get_all_variables(access_key)
 
@@ -623,7 +623,7 @@ def cleardata():
     if user is not None:
         clear_data(access_key)
 
-    return redirect("/")
+    return redirect(url_for("data_and_controls"))
 
 
 @application.route('/clearvars', methods=['GET'])
@@ -634,7 +634,7 @@ def clearvars():
     if user is not None:
         clear_variables(access_key)
 
-    return redirect("/")
+    return redirect(url_for("data_and_controls"))
 
 
 @application.route('/login', methods=['GET', 'POST'])
@@ -648,7 +648,7 @@ def login():
 
         if user is not None and encrypted == user["pass"]:
             response = make_response(redirect("/"))
-            response.set_cookie('token', user["apikey"], max_age=1200)
+            response.set_cookie('token', user["apikey"], max_age=86400)
             return response
         else:
             message = "ERROR: Wrong e-mail or password"
@@ -713,8 +713,6 @@ def resetpass():
             if apikey is None or len(apikey) < 16:
                 apikey = generate_token()
                 set_user(email, apikey)
-
-            email_api_key(email, apikey)
 
             return redirect(url_for('activate', apikey=apikey))
 

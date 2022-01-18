@@ -1,9 +1,9 @@
 .grid {
-  margin: 1em;
   display: grid;
   grid-template-columns: repeat(12, 1fr);
   grid-gap: 2px;
   counter-reset: div;
+  margin: 1em;
 }
 .grid div {
   text-align:center;

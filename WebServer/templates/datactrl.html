@@ -23,9 +23,7 @@
 <div class="grid">
 	<div class="col-1">
 		<div class="data_view">
-			<h1 class="title-heading">CONTROLLS</h1>
-
-			<a href="/clearvars?id={{dldid}}"><i class="fa fa-trash-alt"></i> Clear Controls</a>
+			<h1 class="title-heading">CONTROLLS &nbsp<a href="/clearvars?id={{dldid}}" title="Clear Controls"><i class="fa fa-trash-alt"></i></a></h1>
 
 			{% for key in vars.keys() %}
 			<div class="groupby">
@@ -73,7 +71,8 @@
 
 	<div class="col-1">
 		<div class="data_view">
-			<h1 class="title-heading">LATEST DATA</h1>
+			<h1 class="title-heading">LATEST DATA &nbsp<a href="/cleardata?id={{dldid}}" title="Clear Data"><i class="fa fa-trash-alt"></i></a></h1>
+
 
 			<table class="table eytable table-striped">
 				<tbody>

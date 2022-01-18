@@ -12,11 +12,13 @@
 <body>
 <div class="navbar">
 	<a href="/" class="app_title">OhanaCode Data Portal</a>
+	{% if apikey_msg!="" %}
 	<ul class="menu">
 		<li><a href="/">Home</a></li>
 		<li><a href="/datactrl?dummy={{dldid}}">Data & Controlls</a></li>
 		<li><a href="/graphs?dummy={{dldid}}">Graphs</a></li>
 	</ul>
+	{% endif %}
 	<a id='login_link' href='/{{ login["url"] }}' title='{{ login["name"] }}'><i class='fa {{ login["icon"] }}'></i></a>
 </div>
 <div class="grid">
@@ -36,34 +38,34 @@
 		<br>
 		<h2>Getting started</h2>
 		<ol>
-			<li>Create a free account. You will be emailed your own API key.</li>
+			<li>Create a free account. On the home page footer, after logging in, you will see your API key.</li>
 			<li>Using the API key as an url parameter for a simple HTTP GET request, you can upload and check your data.</li>
 			<li>If you need to visualize the data, just head to "Graphs" page.</li>
-			<li>If you need to change your variables, checkout the "Data & Controls" page.</li>
+			<li>If you need to change your variables manually, checkout the "Data & Controls" page.</li>
 		</ol>
 		<br>
 		<h2>Tutorial</h2>
 		<p>
 			Let's imagine we have a device that controls a simple heater and measures the temperature.
 			To send the current temperature to this portal, it needs to make an HTTP GET request like:<br>
-			http://{{app_url}}/postdata?key=YOUR_API_KEY&N=NAME&V=VALUE&U=UNITS
+			http://{{app_url}}/postdata?key={{apikey}}&N=NAME&V=VALUE&U=UNITS
 		</p>
-		<p class="code">http://{{app_url}}/postdata?key=YOUR_API_KEY&N=Temperature&V=26.4&U=°C</p>
+		<p class="code">http://{{app_url}}/postdata?key={{apikey}}&N=Temperature&V=26.4&U=°C</p>
 		<p> For name and value you can use any HTML safe text. The timestamp will be automatically updated according to current UTC time.
 			At this time, the API does not support timezones, but "Data & Controls" page will display last sample time in your browsers local timezone.<br>
 			After posting few samples, you will be able to view a graphical display on the "Graphs" page.
 		</p>
 		<p>	To retrieve the last posted data value use the "/getdata" page like:
-			http://{{app_url}}/getdata?key=YOUR_API_KEY&N=NAME
+			http://{{app_url}}/getdata?key={{apikey}}&N=NAME
 		</p>
 		<p class="code">
-			http://{{app_url}}/getdata?key=YOUR_API_KEY&N=Temperature
+			http://{{app_url}}/getdata?key={{apikey}}&N=Temperature
 		</p>
 		<p>To set a control variable to turn the heater on/off, go to "/setvar" page. Also make sure you have the correct access key like:<br>
-			http://{{app_url}}/setvar?key=YOUR_API_KEY&N=CONTROL_VAR_NAME&V=VALUE&G=GROUP&T=TYPE
+			http://{{app_url}}/setvar?key={{apikey}}&N=CONTROL_VAR_NAME&V=VALUE&G=GROUP&T=TYPE
 		</p>
 		<p class="code">
-			http://{{app_url}}/setvar?key=YOUR_API_KEY&N=Activated&V=1&G=Manual%20Control&T=toggle
+			http://{{app_url}}/setvar?key={{apikey}}&N=Activated&V=1&G=Manual%20Control&T=toggle
 		</p>
 		<p>	As you can see from above example, a control variable can have the following attributes:</p>
 		<ul>
@@ -85,22 +87,27 @@
 		</ul>
 		<p>Good use of a simple data variable (non toggle) for out heater example would be a target temperature like:</p>
 		<p class="code">
-			http://{{app_url}}/postdata?key=YOUR_API_KEY&N=Target%20Temperature&V=28
+			http://{{app_url}}/postdata?key={{apikey}}&N=Target%20Temperature&V=28
 		</p>
 		<p>	You only need to set the <b>group</b> and <b>type</b> once. All further settings can be done using only <b>name</b> and <b>value</b>.
 			The previously set <b>group</b> and <b>type</b> will be automatically re-used.
 		</p>
 		<p>	To retrieve a control variable value, go to "/getvar" page like:
-    		http://{{app_url}}/getvar?key=YOUR_API_KEY&N=CONTROL_VAR_NAME
+    		http://{{app_url}}/getvar?key={{apikey}}&N=CONTROL_VAR_NAME
 		</p>
 		<p class="code">
-			http://{{app_url}}/getvar?key=YOUR_API_KEY&N=Activated
+			http://{{app_url}}/getvar?key={{apikey}}&N=Activated
 		</p>
 
 	</div>
 </div>
-<div class="footer-col">
-	email: <a href="mailto:{{admin_email}}">{{admin_email}}</a>
+<div class="footer-grid">
+	<div class="col-2">
+		<p>{{apikey_msg}}</p>
+	</div>
+	<div class="col-2 right-aligned">
+		<p>contact: <a href="mailto:{{admin_email}}">{{admin_email}}</a></p>
+	</div>
 </div>
 
 {% if message %}
