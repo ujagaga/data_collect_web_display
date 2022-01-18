@@ -14,9 +14,11 @@ Refer to README.md in each folder for more details.
 ## Branches ##
 
 In this repository you will find: 
-1. "main" git branch is for multiple users and intended to provide a hub for use in multiple simultanious projects. (Not usable yet as it is in development)
+1. "main" git branch is for multiple users and intended to provide a hub for use in multiple simultanious projects.
 2. "single_user_private_app" git branch is a simplified version for single user with hardcoded account.
 
+I have deployed this solution and you can try it at: https://datacollect.ohanacode-dev.com/
+ 
 ## Contact ##
 
 * [My web page](http://www.radinaradionica.com)
