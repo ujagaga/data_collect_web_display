@@ -27,9 +27,9 @@
 		<br>
 		<p>
 			Do you have a device that can sample data (temperature, humidity, moisture, voltage,...), and you need a free solution to upload the data?<br>
-		   	Do existing solution seem to much and confuse you?<br>
+		   	Do existing solution seem too much and confuse you?<br>
 		   	Try this minimalistic solution. It is free to use as long as you need it. The data will be kept for 18 months.
-			All samples older than 18 months will be deleted as part of cleanup, so make sure you download all your data every year.
+			All samples older than 18 months will be deleted as part of cleanup, so make sure you download all your data every year.			
 		</p>
 		<p>Please NOTE: this is <a href="https://github.com/ujagaga/data_collect_web_display">my personal non-profitable, open source</a> project and as such, I give no guarantee how long it will last.
 			I will keep it active for as long as I find it useful and as long as people are using it.
@@ -97,6 +97,12 @@
 		</p>
 		<p class="code">
 			http://{{app_url}}/getvar?key={{apikey}}&N=Activated
+		</p>
+		<p>
+			If you wish to get everything in one HTTP GET request, you can use:
+		</p>
+		<p class="code">
+			http://{{app_url}}/json?key={{apikey}}
 		</p>
 
 	</div>

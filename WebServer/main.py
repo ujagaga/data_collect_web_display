@@ -594,8 +594,7 @@ def getvar():
 
 @application.route('/json', methods=['GET'])
 def get_json():
-    access_key = request.args.get('apikey')
-
+    access_key = request.args.get('key')
     vars = get_all_variables(access_key)
 
     # get latest data ordered by timestamp
