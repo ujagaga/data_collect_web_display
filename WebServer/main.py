@@ -1,4 +1,5 @@
 #!/usr/bin/python3
+import json
 
 from flask import Flask, request, render_template, Markup, send_from_directory, g, redirect, make_response, url_for
 import sys
@@ -195,11 +196,11 @@ def get_variable(name, apikey):
     return data
 
 
-def get_all_variables():
+def get_all_variables(access_key):
     data = None
 
     try:
-        sql = "SELECT * FROM ctrl"
+        sql = "SELECT * FROM ctrl WHERE apikey = '{}'".format(access_key)
         data = query_db(g.db, sql)
 
         items = {}
@@ -401,7 +402,11 @@ def home_page():
         login_var = {"name": "Logout", "url": "logout", "icon": "fa-sign-out-alt"}
 
     message = request.args.get('message')
-    return render_template("home_page.html", dldid=int(time.time()), login=login_var, app_url=APP_URL, message=message)
+    return render_template("home_page.html", dldid=int(time.time()),
+                           login=login_var,
+                           app_url=APP_URL,
+                           message=message,
+                           admin_email=AppConfig.MAIL_DEFAULT_SENDER)
 
 
 @application.route('/graphs')
@@ -490,7 +495,7 @@ def data_and_controls():
                 unit = get_units(apikey=access_key, name=name)
 
                 new_list.append({"name": name, "val": data_dict[name], "unit": unit})
-        vars = get_all_variables()
+        vars = get_all_variables(access_key)
 
         response = make_response(render_template("datactrl.html", dldid=int(time.time()), vars=vars,
                                                  value_list=new_list, login=login_var, ts=last_timestamp))
@@ -570,7 +575,7 @@ def set_var():
 
 @application.route('/getvar', methods=['GET'])
 def get_var():
-    access_key = request.cookies.get('token')
+    access_key = request.args.get('token')
     user = get_user(apikey=access_key)
 
     if user is None:
@@ -584,6 +589,30 @@ def get_var():
             return var
 
     return 'none'
+
+
+@application.route('/json', methods=['GET'])
+def get_json():
+    access_key = request.args.get('apikey')
+    user = get_user(apikey=access_key)
+
+    vars = get_all_variables(access_key)
+
+    # get latest data ordered by timestamp
+    data_list = get_data(apikey=access_key)
+    result_list = []
+    if data_list is not None:
+        data_dict = {}
+
+        for data in data_list:
+            name = data["name"]
+            data_dict[name] = data
+
+        for key in data_dict.keys():
+            result_list.append(data_dict[key])
+
+    result_dict = {"variables": vars, "data": result_list}
+    return json.dumps(result_dict)
 
 
 @application.route('/cleardata', methods=['GET'])
@@ -610,21 +639,21 @@ def clearvars():
 
 @application.route('/login', methods=['GET', 'POST'])
 def login():
-    message = ""
     if request.method == 'POST':
         username = request.form.get("username", '')
         password = request.form.get("password", '')
+        encrypted = pwd_encrypt(password)
 
         user = get_user(username)
 
-        if user is not None and password == user["pass"]:
+        if user is not None and encrypted == user["pass"]:
             response = make_response(redirect("/"))
             response.set_cookie('token', user["apikey"], max_age=1200)
             return response
         else:
-            message = "Email or password incorrect"
+            message = "ERROR: Wrong e-mail or password"
     else:
-        message = request.args.get("message")
+        message = request.args.get("message", "")
 
     response = make_response(render_template('login.html', message=message))
     return response
@@ -634,18 +663,42 @@ def login():
 def register():
     if request.method == 'POST':
         email = request.form.get("email", '')
+        request_type = request.form.get("type", 'register')
         if email != '':
-            # Adding a new user. Generate resetcode to enable password set.
             resetcode = generate_token()
 
-            user = set_user(email=email, resetcode=resetcode)
-            status_msg = None
+            if request_type == 'register':
+                user = set_user(email=email, resetcode=resetcode)
+            else:
+                # Reset requested. Check if the user exists
+                user = get_user(email)
+                if user is not None:
+                    user = set_user(email=email, resetcode=resetcode)
+
             if user is not None:
                 status_msg = send_password_reset_email(user)
-            return redirect(url_for('home_page', message=status_msg))
+            else:
+                status_msg = "There was an error sending the email. The requested user was not found in our database."
 
-    response = make_response(render_template('new_account.html'))
-    return response
+            return redirect(url_for('home_page', message=status_msg))
+    else:
+        forgot_password = request.args.get('resetpass', 'no')
+
+        if forgot_password == 'yes':
+            title = "Reset Password"
+            request_type = "reset"
+            message = "Please provide your email address, so we can send you the reset link."
+        else:
+            title = "Register"
+            request_type = "register"
+            message = "Please provide your email address. It will be used only to send you the activation link " \
+                      "or to reset password.<br>There will be no spam or news from this service."
+
+        response = make_response(render_template('new_account.html',
+                                                 message=message,
+                                                 title=title,
+                                                 request_type=request_type))
+        return response
 
 
 @application.route('/resetpass', methods=['GET'])
@@ -661,9 +714,9 @@ def resetpass():
                 apikey = generate_token()
                 set_user(email, apikey)
 
-                email_api_key(email, apikey)
+            email_api_key(email, apikey)
 
-            return redirect(url_for('activate'))
+            return redirect(url_for('activate', apikey=apikey))
 
     status_msg = "An error occurred while setting your password. Are you sure you followed the right link?"
     return redirect(url_for('home_page', message=status_msg))
@@ -684,7 +737,8 @@ def activate():
 
         user = get_user(apikey=apikey)
         if user is not None and len(password) > 5:
-            set_user(apikey=apikey, password=password)
+            encrypted = pwd_encrypt(password)
+            set_user(apikey=apikey, password=encrypted)
             status_msg = "Password set successfully. You may now login with the new password."
         else:
             status_msg = "An error occurred while setting your password. {} | {} | {}".format(password, user, apikey)
@@ -695,7 +749,8 @@ def activate():
         apikey = request.args.get('apikey')
         response = make_response(render_template('activate_confirmation_page.html',
                                                  apikey=apikey,
-                                                 login=login_var))
+                                                 login=login_var,
+                                                 admin_email=AppConfig.MAIL_DEFAULT_SENDER))
         return response
 
 

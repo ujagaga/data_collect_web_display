@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
-    <title>Register</title>
+    <title>{{title}}</title>
     <link rel="stylesheet" href="{{url_for('static', filename='css/login.css')}}">
     <link rel="stylesheet" href="{{url_for('static', filename='css/general.css')}}">
     <link rel="stylesheet" href="{{url_for('static', filename='css/grid.css')}}">
@@ -16,11 +16,11 @@
 </div>
     <div class="grid">
         <div class="col-1">
-            <p>Please provide your email address. It will be used only to send you the activation link or to reset password.<br>
-                There will be no spam or news from this service.</p>
+            <p>{{message}}</p>
             <form name="loginfrm" id="login-frm" method="POST" action="/register" autocomplete="off">
+                <input type = "hidden" name = "type" value="{{request_type}}">
                 <input type = "text" name = "email" placeholder="Email" id="email"  autofocus autocomplete="off"><br>
-                <input type = "submit" class="btn login-btn" value="Register">
+                <input type = "submit" class="btn login-btn" value="Submit">
             </form>
         </div>
     </div>
