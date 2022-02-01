@@ -12,8 +12,8 @@
 #define MOISTURE_SENSOR_PIN         (A0)
 
 // Controll variable names
-#define MIN_MOIST_VAR               "Minimum%20Moisture"
-#define MAX_MOIST_VAR               "Maximum%20Moisture"
+#define MIN_MOIST_VAR               "Minimum%20Moisture%"
+#define MAX_MOIST_VAR               "Maximum%20Moisture%"
 #define AUTOMATIC_VAR               "Automatic%20Mode"
 #define SPRINKLER_VAR               "Sprinkler%20System"
 #define DRIP_VAR                    "Drip%20System"
@@ -203,15 +203,15 @@ void read_data(){
 void process_settings(){
   if(relayAutomaticMode){
     if(percentage < minPercentage){
-      digitalWrite(SPRINKLER_RELAY_PIN, HIGH);
-    }else if(percentage > maxPercentage){
       digitalWrite(SPRINKLER_RELAY_PIN, LOW);
+    }else if(percentage > maxPercentage){
+      digitalWrite(SPRINKLER_RELAY_PIN, HIGH);
     }
   }else{
     if(sprinklerSystemOn){
-      digitalWrite(SPRINKLER_RELAY_PIN, HIGH);
-    }else{
       digitalWrite(SPRINKLER_RELAY_PIN, LOW);
+    }else{
+      digitalWrite(SPRINKLER_RELAY_PIN, HIGH);
     }
   }
 
@@ -232,6 +232,10 @@ void setup()
   pinMode(SPRINKLER_RELAY_PIN, OUTPUT);
   pinMode(DRIP_RELAY_PIN, OUTPUT);
   pinMode(MOISTURE_SENSOR_PIN, INPUT);
+
+  // Set startup state
+  digitalWrite(SPRINKLER_RELAY_PIN, HIGH);
+  digitalWrite(DRIP_RELAY_PIN, LOW);
   
   WiFi.mode(WIFI_STA);
   WiFiMulti.addAP(SSID_1, PASS_1);
