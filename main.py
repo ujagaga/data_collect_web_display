@@ -276,11 +276,10 @@ def graphs():
     color_id = 0
     access_key = request.cookies.get('token')
     if ADMIN_KEY != access_key:
-        login_var = {"name": "Login", "url": "login", "icon": "fa-sign-in-alt"}
-        authorized = False
-    else:
-        login_var = {"name": "Logout", "url": "logout", "icon": "fa-sign-out-alt"}
-        authorized = True
+        return redirect("/login")
+
+    login_var = {"name": "Logout", "url": "logout", "icon": "fa-sign-out-alt"}
+    authorized = True
 
     plot_list = []
 
@@ -332,39 +331,39 @@ def data_and_controls():
 
     if ADMIN_KEY != access_key:
         return redirect("/login")
-    else:
-        login_var = {"name": "Logout", "url": "logout", "icon": "fa-sign-out-alt"}
-        data_list = get_data()
 
-        if len(data_list) > 0:
-            last_timestamp = int(float(data_list[-1]['timestamp']) * 1000)
-            if time.time() - last_timestamp > 25:
-                status = "disconnected"
-            else:
-                status = "connected"
-        else:
-            last_timestamp = "No data available"
+    login_var = {"name": "Logout", "url": "logout", "icon": "fa-sign-out-alt"}
+    data_list = get_data()
+
+    if len(data_list) > 0:
+        last_timestamp = int(float(data_list[-1]['timestamp']) * 1000)
+        if time.time() - last_timestamp > 25:
             status = "disconnected"
+        else:
+            status = "connected"
+    else:
+        last_timestamp = "No data available"
+        status = "disconnected"
 
-        new_list = []
-        if data_list is not None:
-            data_dict = {}
+    new_list = []
+    if data_list is not None:
+        data_dict = {}
 
-            for data in data_list:
-                name = data["name"]
-                data_dict[name] = data["value"]
+        for data in data_list:
+            name = data["name"]
+            data_dict[name] = data["value"]
 
-            for name in data_dict.keys():
-                unit = get_units(name)
+        for name in data_dict.keys():
+            unit = get_units(name)
 
-                new_list.append({"name": name, "val": data_dict[name], "unit": unit})
-        vars = get_all_variables()
+            new_list.append({"name": name, "val": data_dict[name], "unit": unit})
+    vars = get_all_variables()
 
-        response = make_response(render_template("datactrl.html", dldid=int(time.time()), vars=vars,
-                                                 value_list=new_list, login=login_var, ts=last_timestamp, status=status))
-        response.set_cookie('token', ADMIN_KEY, max_age=1200)
+    response = make_response(render_template("datactrl.html", dldid=int(time.time()), vars=vars,
+                                             value_list=new_list, login=login_var, ts=last_timestamp, status=status))
+    response.set_cookie('token', ADMIN_KEY, max_age=1200)
 
-        return response
+    return response
 
 
 @application.route('/download')
