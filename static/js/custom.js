@@ -72,6 +72,9 @@ function process_keypress(ele) {
 
 $(document).ready(function() {
 
+    var status = "Connection status: " + $("#status").val();
+    $("#status-info").text(status);
+/*
     var lastTs = parseInt($("#last_ts").val(), 10);
     if(lastTs){
         var utcTs = new Date().getTime();
@@ -89,4 +92,5 @@ $(document).ready(function() {
 
         $("#status-info").text(status);
     }
+*/
 });

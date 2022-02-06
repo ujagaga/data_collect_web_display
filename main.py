@@ -338,8 +338,13 @@ def data_and_controls():
 
         if len(data_list) > 0:
             last_timestamp = int(float(data_list[-1]['timestamp']) * 1000)
+            if time.time() - last_timestamp > 25:
+                status = "disconnected"
+            else:
+                status = "connected"
         else:
             last_timestamp = "No data available"
+            status = "disconnected"
 
         new_list = []
         if data_list is not None:
@@ -356,7 +361,7 @@ def data_and_controls():
         vars = get_all_variables()
 
         response = make_response(render_template("datactrl.html", dldid=int(time.time()), vars=vars,
-                                                 value_list=new_list, login=login_var, ts=last_timestamp))
+                                                 value_list=new_list, login=login_var, ts=last_timestamp, status=status))
         response.set_cookie('token', ADMIN_KEY, max_age=1200)
 
         return response
