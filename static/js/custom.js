@@ -71,12 +71,19 @@ function process_keypress(ele) {
 }
 
 $(document).ready(function() {
-
-    var status = "Connection status: " + $("#status").val();
+    var status_text = $("#status").val();
+    var status = "Connection status: " + status_text;
     $("#status-info").text(status);
-/*
-    var lastTs = parseInt($("#last_ts").val(), 10);
-    if(lastTs){
+    if(status_text == "connected"){
+        $("#status-info").addClass("st-connected");
+        $("#status-info").removeClass("st-disconnected");
+    }else{
+        $("#status-info").removeClass("st-connected");
+        $("#status-info").addClass("st-disconnected");
+    }
+
+    var lastTs = parseInt($("#last_ts").val(), 10) * 1000;
+    if(lastTs > 0){
         var utcTs = new Date().getTime();
         var elapsed = Math.floor((utcTs - lastTs) / 1000);
         var h = Math.floor(elapsed / 3600);
@@ -90,7 +97,10 @@ $(document).ready(function() {
         var status = " Last update at: " +  lastDate.toLocaleDateString("en-US", dateFormat) + ", " +
         lastDate.toLocaleTimeString("en-US") + " Elapsed:" + h + ":" + m + ":" + s;
 
-        $("#status-info").text(status);
+        $("#status-ts").text(status);
+    }else{
+        var status = " Last update time unknown."
+        $("#status-ts").text(status);
     }
-*/
+
 });
