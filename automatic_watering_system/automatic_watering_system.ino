@@ -1,14 +1,16 @@
 #include <ESP8266WiFi.h>
 #include <ESP8266WiFiMulti.h>
+#include <DHT.h>    // Install DHT11 Library and Adafruit Unified Sensor Library
 #include <ESP8266HTTPClient.h>
 #include <WiFiClient.h>
 #include "config.h"
-#include "DFRobot_SHT20.h"
 
+#define DHTPIN                      (2)    
 #define LED_PIN                     (14)  
 #define SPRINKLER_RELAY_PIN         (12)
 #define DRIP_RELAY_PIN              (15)
 #define MOISTURE_SENSOR_PIN         (A0)
+#define FAN_PIN                     (5)
 
 // Controll variable names
 #define MIN_MOIST_VAR               "Minimum%20Moisture%"
@@ -17,11 +19,14 @@
 #define SPRINKLER_VAR               "Sprinkler%20System"
 #define DRIP_VAR                    "Drip%20System"
 
-#define SENSOR_READ_TIMEOUT         (10)    
+#define SENSOR_READ_TIMEOUT         (10)   
+#define FAN_TIMEOUT                 (60*60)
+#define FAN_RUN_TIME                (60*10)
 
-DFRobot_SHT20    sht20;     // Connect SCL to GPIO5 and SDA to GPIO4
+#define DHTTYPE    DHT11
 ESP8266WiFiMulti WiFiMulti;
 
+DHT dht(DHTPIN, DHTTYPE);
 float minPercentage = 20; // Adjust for minimum percentage under which the relay is activated
 float maxPercentage = 90;
 
@@ -32,6 +37,7 @@ float f = 0;
 float percentage = 0;
 
 unsigned long cycle_timestamp = 0;
+unsigned long fan_timestamp = 0;
 bool relayAutomaticMode = false;
 bool sprinklerSystemOn = false;
 bool dripSystemOn = false;
@@ -77,17 +83,13 @@ return result;
 
 /* Reads sensors and stores values in global variables to make them available in every function */
 void read_sensors(){
-
-  h = sht20.readHumidity();                  // Read Humidity
-  t = sht20.readTemperature();               // Read Temperature
-
-    Serial.print(" Temperature:");
-    Serial.print(t, 1);
-    Serial.print("C");
-    Serial.print(" Humidity:");
-    Serial.print(h, 1);
-    Serial.print("%");
-    Serial.println();
+  // Reading temperature or humidity takes about 250 milliseconds!
+  // Sensor readings may also be up to 2 seconds 'old' (its a very slow sensor)
+  h = dht.readHumidity();
+  // Read temperature as Celsius (the default)
+  t = dht.readTemperature();
+  // Read temperature as Fahrenheit (isFahrenheit = true)
+  f = dht.readTemperature(true);
 
   int moi = 1024-analogRead(MOISTURE_SENSOR_PIN); 
   percentage = map(moi,0,1023,0,100);
@@ -218,9 +220,9 @@ void process_settings(){
   }
 
   if(dripSystemOn){
-    digitalWrite(DRIP_RELAY_PIN, HIGH);
-  }else{
     digitalWrite(DRIP_RELAY_PIN, LOW);
+  }else{
+    digitalWrite(DRIP_RELAY_PIN, HIGH);
   }
 }
 
@@ -229,6 +231,7 @@ void setup()
 
   Serial.begin(115200);
 
+  dht.begin();
   pinMode(LED_PIN, OUTPUT);
   pinMode(SPRINKLER_RELAY_PIN, OUTPUT);
   pinMode(DRIP_RELAY_PIN, OUTPUT);
@@ -236,11 +239,7 @@ void setup()
 
   // Set startup state
   digitalWrite(SPRINKLER_RELAY_PIN, HIGH);
-  digitalWrite(DRIP_RELAY_PIN, LOW);
-
-  sht20.initSHT20();                                  // Init SHT20 Sensor
-  delay(100);
-  sht20.checkSHT20();                                 // Check SHT20 Sensor
+  digitalWrite(DRIP_RELAY_PIN, HIGH);
   
   WiFi.mode(WIFI_STA);
   WiFiMulti.addAP(SSID_1, PASS_1);
@@ -266,4 +265,17 @@ void loop() {
     process_settings();
     cycle_timestamp = millis();
   }
+
+  if((millis() - fan_timestamp) > (FAN_TIMEOUT * 1000)){  
+    // Elapsed FAN_TIMEOUT seconds since fan was last run. Time to start it.
+    digitalWrite(FAN_PIN, HIGH);
+
+    if((millis() - fan_timestamp) > ((FAN_TIMEOUT + FAN_RUN_TIME) * 1000)){
+      // Elapsed FAN_TIMEOUT + FAN_RUN_TIME seconds since fan was last run. Time to stop it.
+      fan_timestamp = millis();
+    }
+  }else{
+    digitalWrite(FAN_PIN, LOW);
+  }
+  
 }
