@@ -21,7 +21,7 @@
 
 #define SENSOR_READ_TIMEOUT         (10)   
 #define FAN_TIMEOUT                 (60*60)
-#define FAN_RUN_TIME                (60*10)
+#define FAN_RUN_TIME                (10*60)
 
 #define DHTTYPE    DHT11
 ESP8266WiFiMulti WiFiMulti;
@@ -236,6 +236,7 @@ void setup()
   pinMode(SPRINKLER_RELAY_PIN, OUTPUT);
   pinMode(DRIP_RELAY_PIN, OUTPUT);
   pinMode(MOISTURE_SENSOR_PIN, INPUT);
+  pinMode(FAN_PIN, OUTPUT);
 
   // Set startup state
   digitalWrite(SPRINKLER_RELAY_PIN, HIGH);
