@@ -30,7 +30,7 @@
 				<h2>{{ key }}</h2>
 				{% for variable in vars[key] %}
 
-					{% if variable["type"].startswith("t") %}
+					{% if variable["type"].startswith("t") or variable["type"].startswith("o") %}
 					<div class="toggle-var">
 						<p>{{ variable["name"] }}</p>
 						<label>
@@ -72,8 +72,6 @@
 	<div class="col-1">
 		<div class="data_view">
 			<h1 class="title-heading">LATEST DATA &nbsp<a href="/cleardata?id={{dldid}}" title="Clear Data"><i class="fa fa-trash-alt"></i></a></h1>
-
-
 			<table class="table eytable table-striped">
 				<tbody>
 					{% for variable in value_list %}

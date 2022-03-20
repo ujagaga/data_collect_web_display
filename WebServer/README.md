@@ -41,7 +41,7 @@ As you can see from above example, a control variable can have the following att
     N ... name
     V ... value
     G ... group to use to group multiple variables
-    T ... type of the variable. The supported types are "toggle" and "semaphore". You can use just the first letter (t or s).
+    T ... type of the variable. The supported types are "onetime", "toggle" and "semaphore". You can use just the first letter (o, t or s).
             If toggle type is set, the variable will be displayed with a toggle button. 
             If semaphore type is set, the variable will be displayed as an LED.
             If no type is set, it will be displayed as an editable input box value.

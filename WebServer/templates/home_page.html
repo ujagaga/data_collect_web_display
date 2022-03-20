@@ -79,10 +79,11 @@
 				G ... optional group to use to group multiple variables
 			</li>
 			<li>
-				T ... type of the variable. The supported types are "toggle" and "semaphore".
-            	If toggle type is set, the variable will be displayed as a toggle button.
-				If semaphore type is set, the variable will be displayed as an LED.
-				If no type is specified, it will be displayed as an editable input box value.
+				T ... type of the variable. The supported types are "onetime", "toggle" and "semaphore".<br>
+            	If toggle type is set, the variable will be displayed as a toggle button.<br>
+				If semaphore type is set, the variable will be displayed as an LED.<br>
+				If onetime or no type is specified, it will be displayed as an editable input box value.
+				In case of onetime, upon reading, the value will be set to zero.
 			</li>
 		</ul>
 		<p>Good use of a simple data variable (non toggle) for out heater example would be a target temperature like:</p>

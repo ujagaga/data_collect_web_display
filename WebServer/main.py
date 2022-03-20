@@ -24,7 +24,7 @@ application = Flask(__name__, static_url_path='/static', static_folder='static')
 application.config.update(
     TESTING=False,
     SECRET_KEY="RandomlyGenerated_1234asdfhg3324r89u7dsfkjdsbvc",
-    SERVER_NAME=AppConfig.APP_URL,
+    #SERVER_NAME=AppConfig.APP_URL,
     SESSION_COOKIE_DOMAIN=AppConfig.APP_URL,
     SESSION_TYPE="redis",
     MAIL_SERVER=AppConfig.MAIL_SERVER,
@@ -209,6 +209,8 @@ def get_all_variables(access_key):
             item_list = items.get(group, [])
             item_list.append(item)
             items[group] = item_list
+            if item["type"].startswith("o"):
+                set_variable(name=item["name"], apikey=access_key, value=0)
 
         data = items
 
