@@ -92,7 +92,7 @@ def before_request():
             db.execute(sql)
             db.commit()
 
-            sql = "create table ctrl (name TEXT, value TEXT, groupby TEXT, type TEXT, apikey TEXT)"
+            sql = "create table ctrl (name TEXT, value TEXT, groupby TEXT, type TEXT, apikey TEXT, validuntil TEXT)"
             db.execute(sql)
             db.commit()
 
@@ -221,15 +221,22 @@ def get_all_variables(access_key):
     return data
 
 
-def set_variable(name, apikey, value, groupby="", var_type=""):
+def set_variable(name, apikey, value, groupby="", var_type="", duration=0):
     try:
         data = get_variable(name, apikey)
 
+        try:
+            duration_s = int(duration)
+        except:
+            duration_s = 24 * 60 * 60
+        validuntil = int(time.time()) + duration
+
         if data is None:
-            sql = "INSERT INTO ctrl (name, value, groupby, type, apikey) VALUES ('{}', '{}', '{}', '{}', '{}')" \
-                  "".format(name, value, groupby, var_type, apikey)
+            sql = "INSERT INTO ctrl (name, value, groupby, type, apikey, validuntil) VALUES ('{}', '{}', '{}', '{}', '{}', '{}')" \
+                  "".format(name, value, groupby, var_type, apikey, validuntil)
         else:
-            sql = "UPDATE ctrl SET value = '{}' WHERE name = '{}' AND apikey = '{}'".format(value, name, apikey)
+            sql = "UPDATE ctrl SET value = '{}', validuntil = '{}' WHERE name = '{}' AND apikey = '{}'" \
+                  "".format(value, validuntil, name, apikey)
         exec_db(sql)
 
     except Exception as exc:
@@ -569,9 +576,10 @@ def setvar():
     value = request.args.get('V', None)
     groupby = request.args.get('G', "")
     var_type = request.args.get('T', "")
+    duration = request.args.get('D', "")
 
     if name is not None and value is not None:
-        set_variable(apikey=apikey, name=name, value=value, groupby=groupby, var_type=var_type)
+        set_variable(apikey=apikey, name=name, value=value, groupby=groupby, var_type=var_type, duration=duration)
 
     return 'ok'
 

@@ -45,6 +45,8 @@ As you can see from above example, a control variable can have the following att
             If toggle type is set, the variable will be displayed with a toggle button. 
             If semaphore type is set, the variable will be displayed as an LED.
             If no type is set, it will be displayed as an editable input box value.
+    D ... duration in seconds from the time it is set. If requested after this period, it is considered expired. Defaults to 24 hours.
+            This is useful when using a "onetime" variable type.
             
 To retrieve a control variable value, go to "/getvar" page like:
 
