@@ -92,7 +92,8 @@ def before_request():
             db.execute(sql)
             db.commit()
 
-            sql = "create table ctrl (name TEXT, value TEXT, groupby TEXT, type TEXT, apikey TEXT, validuntil TEXT)"
+            sql = "create table ctrl (name TEXT, value TEXT, groupby TEXT, type TEXT, apikey TEXT, timestamp TEXT, " \
+                  "duration TEXT)"
             db.execute(sql)
             db.commit()
 
@@ -191,9 +192,38 @@ def get_variable(name, apikey):
         print("ERROR reading data on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
 
     if data is not None:
+        if data["type"].startswith("o"):
+            timestamp = int(data['timestamp'])
+            duration = int(data['duration'])
+            if (time.time() - timestamp) > duration:
+                data['value'] = '0'
         return data.get('value', '')
 
     return data
+    
+    
+def set_variable(name, apikey, value, groupby="", var_type="", duration='0'):
+    try:
+        data = get_variable(name, apikey)
+
+        try:
+            duration_s = int(duration)
+        except:
+            duration_s = 24 * 60 * 60
+        timestamp = int(time.time())
+
+        if data is None:
+            sql = "INSERT INTO ctrl (name, value, groupby, type, apikey, timestamp, duration) VALUES " \
+                  "('{}', '{}', '{}', '{}', '{}', '{}', '{}')" \
+                  "".format(name, value, groupby, var_type, apikey, timestamp, duration_s)
+        else:
+            sql = "UPDATE ctrl SET value = '{}', timestamp = '{}' WHERE name = '{}' AND apikey = '{}'" \
+                  "".format(value, timestamp, name, apikey)
+        exec_db(sql)
+
+    except Exception as exc:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        print("ERROR writing data to db on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
 
 
 def get_all_variables(access_key):
@@ -205,12 +235,16 @@ def get_all_variables(access_key):
 
         items = {}
         for item in data:
+            if item["type"].startswith("o"):
+                timestamp = int(item['timestamp'])
+                duration = int(item['duration'])
+                if (time.time() - timestamp) > duration:
+                    item['value'] = '0'
+
             group = item["groupby"]
             item_list = items.get(group, [])
             item_list.append(item)
             items[group] = item_list
-            if item["type"].startswith("o"):
-                set_variable(name=item["name"], apikey=access_key, value=0)
 
         data = items
 
@@ -219,29 +253,6 @@ def get_all_variables(access_key):
         print("ERROR reading data on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
 
     return data
-
-
-def set_variable(name, apikey, value, groupby="", var_type="", duration=0):
-    try:
-        data = get_variable(name, apikey)
-
-        try:
-            duration_s = int(duration)
-        except:
-            duration_s = 24 * 60 * 60
-        validuntil = int(time.time()) + duration
-
-        if data is None:
-            sql = "INSERT INTO ctrl (name, value, groupby, type, apikey, validuntil) VALUES ('{}', '{}', '{}', '{}', '{}', '{}')" \
-                  "".format(name, value, groupby, var_type, apikey, validuntil)
-        else:
-            sql = "UPDATE ctrl SET value = '{}', validuntil = '{}' WHERE name = '{}' AND apikey = '{}'" \
-                  "".format(value, validuntil, name, apikey)
-        exec_db(sql)
-
-    except Exception as exc:
-        exc_type, exc_obj, exc_tb = sys.exc_info()
-        print("ERROR writing data to db on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
 
 
 def clear_data(apikey):
@@ -597,7 +608,7 @@ def getvar():
     if name is not None:
         var = get_variable(name=name, apikey=apikey)
         if var is not None:
-            return var
+            return "{}".format(var)
 
     return 'none'
 
