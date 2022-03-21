@@ -7,7 +7,7 @@ Controll variables are used to switch relays or LEDs ON/OFF, so they are display
 ## How to start ##
 The "WebServer" folder contains the web interface you can use on your local network or deploy it on a hosting service. It will give you data overview and controll interface for your network enabled devices.
 
-The "ArduinoExamples" folder contains examples for ESP8266 board used as an automatic plant watering system control.
+The "ArduinoExamples" folder contains examples for ESP8266 board.
 
 Refer to README.md in each folder for more details.
 
