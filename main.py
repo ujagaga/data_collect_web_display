@@ -6,7 +6,7 @@ import os
 import sqlite3
 import plotly
 from plotly.graph_objs import Scatter, Layout
-from datetime import datetime
+from datetime import datetime, timedelta
 import time
 import json
 
@@ -14,9 +14,9 @@ application = Flask(__name__, static_url_path='/static', static_folder='static')
 application.secret_key = "<g\x93E\xf3\xc6\xb8\xc4\x87\xff\xf6\x0fxD\x91\x13\x9e\xfe1+%\xa3"
 db_path = "database.db"
 WEB_PORT = 8000
-ADMIN_USERNAME = "admin"
-ADMIN_PASS = "admin123"
-ADMIN_KEY = "AdminSecretKey123"     # An HTML safe string
+ADMIN_USERNAME = "smart"
+ADMIN_PASS = "smart123"
+ADMIN_KEY = "SmartHorti123"     # An HTML safe string
 COLORS = ["#000000", "#A52A2A", "#7FFFD4", "#8A2BE2", "#D2691E", "#2F4F4F", "#008000"]
 color_id = 0
 
@@ -30,7 +30,8 @@ def init_database():
         db.execute(sql)
         db.commit()
 
-        sql = "create table ctrl (name TEXT, value TEXT, groupby TEXT, type TEXT)"
+        sql = "create table ctrl (name TEXT, value TEXT, groupby TEXT, type TEXT, " \
+              "scheduletime TEXT, hour TEXT, duration TEXT, repeat TEXT, active TEXT, tz TEXT)"
         db.execute(sql)
         db.commit()
 
@@ -88,6 +89,24 @@ def get_variable(name):
         print("ERROR reading data on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
 
     if data is not None:
+        var_type = data["type"]
+        sch_time = data["scheduletime"]
+        if (var_type == "toggle") and (sch_time is not None) and (int(data["active"]) > 0):
+            sch_timestamp = int(sch_time)
+            current_timestamp = int(time.time())
+            duration = int(data["duration"]) * 60
+            data["value"] = '0'
+
+            if current_timestamp > sch_timestamp:
+                time_diff = current_timestamp - sch_timestamp
+                repeat = int(data["repeat"])
+
+                if repeat > 0:
+                    time_diff = time_diff % (24 * 60 * 60)
+
+                if time_diff < duration:
+                    data["value"] = '1'
+
         return data.get('value', '')
 
     return data
@@ -102,6 +121,24 @@ def get_all_variables():
 
         items = {}
         for item in data:
+            var_type = item["type"]
+            sch_time = item["scheduletime"]
+            if (var_type == "toggle") and (sch_time is not None) and (int(item["active"]) > 0):
+                sch_timestamp = int(sch_time)
+                current_timestamp = int(time.time())
+                duration = int(item["duration"]) * 60
+                item["value"] = '0'
+
+                if current_timestamp > sch_timestamp:
+                    time_diff = current_timestamp - sch_timestamp
+                    repeat = int(item["repeat"])
+
+                    if repeat > 0:
+                        time_diff = time_diff % (24 * 60 * 60)
+
+                    if time_diff < duration:
+                        item["value"] = '1'
+
             group = item["groupby"]
             item_list = items.get(group, [])
             item_list.append(item)
@@ -125,6 +162,17 @@ def set_variable(name, value, groupby="", var_type=""):
                   "".format(name, value, groupby, var_type)
         else:
             sql = "UPDATE ctrl SET value = '{}' WHERE name = '{}'".format(value, name)
+        exec_db(sql)
+
+    except Exception as exc:
+        exc_type, exc_obj, exc_tb = sys.exc_info()
+        print("ERROR writing data to db on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
+
+
+def set_schedule(name, hour, duration, repeat, activate_time, active, tz_delta):
+    try:
+        sql = "UPDATE ctrl SET scheduletime = '{}', hour = '{}', duration = '{}', repeat = '{}', active = '{}', " \
+              "tz_delta = '{}' WHERE name = '{}'".format(activate_time, hour, duration, repeat, active, tz_delta, name)
         exec_db(sql)
 
     except Exception as exc:
@@ -277,7 +325,7 @@ def graphs():
     access_key = request.cookies.get('token')
     if ADMIN_KEY != access_key:
         return redirect("/login")
-
+    
     login_var = {"name": "Logout", "url": "logout", "icon": "fa-sign-out-alt"}
     authorized = True
 
@@ -331,19 +379,19 @@ def data_and_controls():
 
     if ADMIN_KEY != access_key:
         return redirect("/login")
-
+    
     login_var = {"name": "Logout", "url": "logout", "icon": "fa-sign-out-alt"}
     data_list = get_data()
 
     if len(data_list) > 0:
-        last_timestamp = int(float(data_list[-1]['timestamp']) * 1000)
+        last_timestamp = int(float(data_list[-1]['timestamp']))
         if time.time() - last_timestamp > 25:
-            status = "disconnected"
+            status = "Disconnected"
         else:
-            status = "connected"
+            status = "Connected"
     else:
         last_timestamp = "No data available"
-        status = "disconnected"
+        status = "Disconnected"
 
     new_list = []
     if data_list is not None:
@@ -351,10 +399,17 @@ def data_and_controls():
 
         for data in data_list:
             name = data["name"]
-            data_dict[name] = data["value"]
+            
+            if status == "Disconnected":
+                data_dict[name] = "unknown"
+            else:
+                data_dict[name] = data["value"]
 
         for name in data_dict.keys():
-            unit = get_units(name)
+            if status == "Disconnected":
+                unit = ""
+            else:
+                unit = get_units(name)
 
             new_list.append({"name": name, "val": data_dict[name], "unit": unit})
     vars = get_all_variables()
@@ -427,6 +482,56 @@ def set_var():
 
     if name is not None and value is not None:
         set_variable(name, value, groupby, var_type)
+
+    return 'ok'
+
+
+@application.route('/setvarschedule', methods=['GET'])
+def set_var_schedule():
+    access_key = request.args.get('key', ' ')
+
+    if ADMIN_KEY != access_key:
+        return redirect("/login")
+
+    value = request.args.get('V', None)
+    if value is not None:
+        try:
+            data = json.loads(value)
+
+            local_time = data.get("t", "").split(":")
+            local_h = int(local_time[0])
+            local_m = int(local_time[1])
+
+            server_time = datetime.now()
+            server_h = server_time.hour
+            server_m = server_time.minute
+            activate_date = datetime.now().replace(hour=local_h, minute=local_m)
+            tz_delta = ((local_h - server_h) * 60 + (local_m - server_m)) * 60
+
+            h = int(data.get("h", local_h))
+            if h < local_h:
+                # Add 24h to set for tomorrow
+                activate_date = activate_date + timedelta(hours=24)
+                activate_date = activate_date.replace(hour=h)
+
+            activate_timestamp = int(datetime.timestamp(activate_date)) - tz_delta
+
+            active = int(data.get("a", "0"))
+            if h < 0:
+                active = 0
+
+            duration = int(data.get("d", "-1"))
+            if int(data.get("r", "0")) == 0:
+                repeat = 0
+            else:
+                repeat = 1
+            name = data.get("n", "")
+            set_schedule(name=name, hour=h, duration=duration, repeat=repeat, activate_time=activate_timestamp,
+                         active=active, tz_delta=tz_delta)
+
+        except Exception as exc:
+            exc_type, exc_obj, exc_tb = sys.exc_info()
+            print("ERROR using data on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
 
     return 'ok'
 

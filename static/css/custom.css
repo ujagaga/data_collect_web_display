@@ -41,3 +41,14 @@
 .wide{
     width: 100%;
 }
+
+.schedule-row{
+    margin-left: 20px;
+    margin-right: 20px;
+}
+
+#repeat_daily{
+    height: 1.5em;
+    width: 1.5em;
+    margin-top: 2em;
+}

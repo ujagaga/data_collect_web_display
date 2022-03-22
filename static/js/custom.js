@@ -42,6 +42,22 @@ function saveVar(name, value) {
     xhttp.send();
 }
 
+function saveVarSchedule(value) {
+    key = getCookie("token");
+    var url = "/setvarschedule?key=" + key + "&V=" + value;
+    url = url.replaceAll(' ', '%20');
+
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+
+        if (xhttp.readyState == 4 && xhttp.status == 200){
+            location.reload();
+        }
+    };
+    xhttp.open("GET", url, true);
+    xhttp.send();
+}
+
 function toggleVar(name, caller){
     var value = 0;
     if(caller.checked){
@@ -50,12 +66,36 @@ function toggleVar(name, caller){
     saveVar(name, value);
 }
 
+function applyVarSchedule(name){
+    var checked = document.getElementById("tgl_" + name.replace(" ", "%20%")).checked;
+    active = 0;
+    if(checked){
+        active = 1;
+    }
+    var onTime = document.getElementById("sch_on_" + name).value;
+    var duration = document.getElementById("sch_off_" + name).value;
+    var repeat = 0;
+    if(document.getElementById("sch_rep_" + name).checked){
+        repeat = 1;
+    }
+    var currentTime = new Date();
+    var currentTimestamp = currentTime.getHours() + ":" + currentTime.getMinutes();
+    var data = {"n": name, "h": onTime, "d": duration, "r": repeat, "t": currentTimestamp, "a": active}
+    var value = JSON.stringify(data);
+    saveVarSchedule(value);
+}
+
 function process_apply_button(ele){
     var inputId = ele.id.replace("btn_", "var_");
     var name = ele.id.replace("btn_", "").replaceAll("%20%", " ");
 
     var value = document.getElementById(inputId).value;
     saveVar(name, value);
+}
+
+function process_schedule(variable_name){
+     var applyBtnId = "btn_apply_" + variable_name;
+    document.getElementById(applyBtnId).style.display = "block";
 }
 
 function process_keypress(ele) {
@@ -72,14 +112,14 @@ function process_keypress(ele) {
 
 $(document).ready(function() {
     var status_text = $("#status").val();
-    var status = "Connection status: " + status_text;
+    var status = "Connection Status: " + status_text;
     $("#status-info").text(status);
-    if(status_text == "connected"){
-        $("#status-info").addClass("st-connected");
-        $("#status-info").removeClass("st-disconnected");
+    if(status_text == "Connected"){
+        $("#status-info").addClass("st-Connected");
+        $("#status-info").removeClass("st-Disconnected");
     }else{
-        $("#status-info").removeClass("st-connected");
-        $("#status-info").addClass("st-disconnected");
+        $("#status-info").removeClass("st-Connected");
+        $("#status-info").addClass("st-Disconnected");
     }
 
     var lastTs = parseInt($("#last_ts").val(), 10) * 1000;

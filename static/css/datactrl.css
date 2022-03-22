@@ -363,11 +363,11 @@ a.text:hover{text-decoration:none}
     padding: 8px;
 }
 
-.st-disconnected, .st-connected{
+.st-Disconnected, .st-Connected{
     position: relative;
     margin-right: 2em;
 }
-.st-disconnected::after, .st-connected::after{
+.st-Disconnected::after, .st-Connected::after{
     content: "";
     width: 1em;
     height: 1em;
@@ -378,10 +378,10 @@ a.text:hover{text-decoration:none}
     bottom: 0.5em;
 }
 
-.st-disconnected::after{
+.st-Disconnected::after{
     background-color: red;
 }
 
-.st-connected::after{
+.st-Connected::after{
     background-color: green;
 }
