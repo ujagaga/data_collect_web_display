@@ -31,7 +31,7 @@ def init_database():
         db.commit()
 
         sql = "create table ctrl (name TEXT, value TEXT, groupby TEXT, type TEXT, " \
-              "scheduletime TEXT, hour TEXT, duration TEXT, repeat TEXT, active TEXT, tz TEXT)"
+              "scheduletime TEXT, hour TEXT, duration TEXT, repeatdaily TEXT, active TEXT, tz TEXT)"
         db.execute(sql)
         db.commit()
 
@@ -75,7 +75,7 @@ def clear_variables():
         exec_db(sql)
     except Exception as exc:
         exc_type, exc_obj, exc_tb = sys.exc_info()
-        print("ERROR reading data on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
+        print("ERROR reading data on line {}!\n\t{}".format(exc_tb.tb_lineno, exc), flush=True)
 
 
 def get_variable(name):
@@ -86,7 +86,7 @@ def get_variable(name):
         data = query_db(g.db, sql, one=True)
     except Exception as exc:
         exc_type, exc_obj, exc_tb = sys.exc_info()
-        print("ERROR reading data on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
+        print("ERROR reading data on line {}!\n\t{}".format(exc_tb.tb_lineno, exc), flush=True)
 
     if data is not None:
         var_type = data["type"]
@@ -99,7 +99,7 @@ def get_variable(name):
 
             if current_timestamp > sch_timestamp:
                 time_diff = current_timestamp - sch_timestamp
-                repeat = int(data["repeat"])
+                repeat = int(data["repeatdaily"])
 
                 if repeat > 0:
                     time_diff = time_diff % (24 * 60 * 60)
@@ -131,7 +131,7 @@ def get_all_variables():
 
                 if current_timestamp > sch_timestamp:
                     time_diff = current_timestamp - sch_timestamp
-                    repeat = int(item["repeat"])
+                    repeat = int(item["repeatdaily"])
 
                     if repeat > 0:
                         time_diff = time_diff % (24 * 60 * 60)
@@ -148,7 +148,7 @@ def get_all_variables():
 
     except Exception as exc:
         exc_type, exc_obj, exc_tb = sys.exc_info()
-        print("ERROR reading data on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
+        print("ERROR reading data on line {}!\n\t{}".format(exc_tb.tb_lineno, exc), flush=True)
 
     return data
 
@@ -166,18 +166,18 @@ def set_variable(name, value, groupby="", var_type=""):
 
     except Exception as exc:
         exc_type, exc_obj, exc_tb = sys.exc_info()
-        print("ERROR writing data to db on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
+        print("ERROR writing data to db on line {}!\n\t{}".format(exc_tb.tb_lineno, exc), flush=True)
 
 
 def set_schedule(name, hour, duration, repeat, activate_time, active, tz_delta):
     try:
-        sql = "UPDATE ctrl SET scheduletime = '{}', hour = '{}', duration = '{}', repeat = '{}', active = '{}', " \
+        sql = "UPDATE ctrl SET scheduletime = '{}', hour = '{}', duration = '{}', repeatdaily = '{}', active = '{}', " \
               "tz_delta = '{}' WHERE name = '{}'".format(activate_time, hour, duration, repeat, active, tz_delta, name)
         exec_db(sql)
 
     except Exception as exc:
         exc_type, exc_obj, exc_tb = sys.exc_info()
-        print("ERROR writing data to db on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
+        print("ERROR writing data to db on line {}!\n\t{}".format(exc_tb.tb_lineno, exc), flush=True)
 
 
 def clear_data():
@@ -186,7 +186,7 @@ def clear_data():
         exec_db(sql)
     except Exception as exc:
         exc_type, exc_obj, exc_tb = sys.exc_info()
-        print("ERROR reading data on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
+        print("ERROR reading data on line {}!\n\t{}".format(exc_tb.tb_lineno, exc), flush=True)
 
 
 def save_data(name, value):
@@ -199,7 +199,7 @@ def save_data(name, value):
 
     except Exception as exc:
         exc_type, exc_obj, exc_tb = sys.exc_info()
-        print("ERROR writing data to db on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
+        print("ERROR writing data to db on line {}!\n\t{}".format(exc_tb.tb_lineno, exc), flush=True)
 
 
 def get_data(name=None):
@@ -215,7 +215,7 @@ def get_data(name=None):
 
     except Exception as exc:
         exc_type, exc_obj, exc_tb = sys.exc_info()
-        print("ERROR reading data on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
+        print("ERROR reading data on line {}!\n\t{}".format(exc_tb.tb_lineno, exc), flush=True)
 
     return data
 
@@ -229,7 +229,7 @@ def set_unit(name, unit):
 
     except Exception as exc:
         exc_type, exc_obj, exc_tb = sys.exc_info()
-        print("ERROR writing data to db on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
+        print("ERROR writing data to db on line {}!\n\t{}".format(exc_tb.tb_lineno, exc), flush=True)
 
 
 def get_units(name):
@@ -252,7 +252,7 @@ def get_units(name):
 
     except Exception as exc:
         exc_type, exc_obj, exc_tb = sys.exc_info()
-        print("ERROR reading data on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
+        print("ERROR reading data on line {}!\n\t{}".format(exc_tb.tb_lineno, exc), flush=True)
 
     return unit
 
@@ -531,7 +531,7 @@ def set_var_schedule():
 
         except Exception as exc:
             exc_type, exc_obj, exc_tb = sys.exc_info()
-            print("ERROR using data on line {}!\n\t{}".format(exc_tb.tb_lineno, exc))
+            print("ERROR using data on line {}!\n\t{}".format(exc_tb.tb_lineno, exc), flush=True)
 
     return 'ok'
 
