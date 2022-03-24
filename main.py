@@ -505,14 +505,15 @@ def set_var_schedule():
             server_time = datetime.now()
             server_h = server_time.hour
             server_m = server_time.minute
-            activate_date = datetime.now().replace(hour=local_h, minute=local_m)
+
             tz_delta = ((local_h - server_h) * 60 + (local_m - server_m)) * 60
 
             h = int(data.get("h", local_h))
+            activate_date = datetime.now().replace(hour=h, minute=0, second=0)
+
             if h < local_h:
                 # Add 24h to set for tomorrow
                 activate_date = activate_date + timedelta(hours=24)
-                activate_date = activate_date.replace(hour=h)
 
             activate_timestamp = int(datetime.timestamp(activate_date)) - tz_delta
 
